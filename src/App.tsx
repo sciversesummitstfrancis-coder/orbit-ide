@@ -4,6 +4,7 @@ import "./styles/tokens.css";
 import "./styles/app.css";
 import Explorer from "./components/Explorer";
 import OrbitEditor from "./components/Editor";
+import TerminalPanel from "./components/TerminalPanel";
 import { orbit } from "./services/orbit";
 import { useWorkspace } from "./store/workspace";
 
@@ -139,13 +140,16 @@ export default function App() {
                 <button key={t} type="button" className={`panel-tab ${panel === t ? "active" : ""}`} onClick={() => setPanel(t)}>{{ terminal: "Terminal", problems: "Problems", output: "Output", debug: "Debug Console", "git-history": "Git History" }[t]}</button>
               ))}
             </div>
-            <div className="panel-body">
-              {panel === "terminal" ? "Integrated PTY terminal is planned for Milestone 5 (Rust process management + xterm.js)." :
-               panel === "git-history" ? (ws.root ? "Git history view is planned for Milestone 6. The Source Control sidebar shows current branch and changed files." : "Open a workspace to inspect Git history.") :
-               panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") :
-               panel === "problems" ? "Diagnostics and LSP problems are planned for Milestone 7." :
-               "Debug console is planned for a later milestone."}
-            </div>
+            {panel === "terminal" ? (
+              <div style={{ minHeight: 0, height: "100%" }}><TerminalPanel cwd={ws.root} /></div>
+            ) : (
+              <div className="panel-body">
+                {panel === "git-history" ? (ws.root ? "Git history view is planned for Milestone 6. The Source Control sidebar shows current branch and changed files." : "Open a workspace to inspect Git history.") :
+                 panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") :
+                 panel === "problems" ? "Diagnostics and LSP problems are planned for Milestone 7." :
+                 "Debug console is planned for a later milestone."}
+              </div>
+            )}
           </div>
         </section>
       </div>
