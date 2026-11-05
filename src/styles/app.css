@@ -33,3 +33,11 @@
 .status { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 10px; background: #182029; border-top: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 12px; }
 .status .left, .status .right { display: flex; gap: 12px; align-items: center; min-width: 0; }
 .status .pill { color: #dffcff; }
+
+.tree { font-size: 12px; }
+.tree-row { display: flex; align-items: center; gap: 6px; width: 100%; padding: 3px 8px; border: none; background: transparent; color: var(--text); text-align: left; border-radius: var(--radius-sm); }
+.tree-row:hover { background: var(--bg-2); }
+.tree-glyph { width: 18px; color: var(--text-faint); font-family: var(--font-mono); font-size: 10px; flex: 0 0 auto; }
+.tree-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab-close { margin-left: 8px; color: var(--text-faint); }
+.tab-close:hover { color: var(--text); }
