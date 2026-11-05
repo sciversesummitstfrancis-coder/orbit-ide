@@ -1,44 +1,50 @@
 :root {
-  --bg-0: #14181d;
-  --bg-1: #1b2128;
-  --bg-2: #232b34;
-  --bg-3: #2b3440;
-  --border: #334050;
-  --border-subtle: #26303b;
-  --text: #d7e2ec;
-  --text-muted: #93a4b5;
-  --text-faint: #66798a;
+  --bg-0: #11161c;
+  --bg-1: #171d25;
+  --bg-2: #1e2630;
+  --bg-3: #263140;
+  --bg-hover: #212b36;
+  --border: #2d3b49;
+  --border-subtle: #22303d;
+  --text: #dce7f1;
+  --text-muted: #97aabc;
+  --text-faint: #6b8094;
   --accent: #22d3ee;
   --accent-2: #2dd4bf;
-  --accent-bg: rgba(34, 211, 238, 0.12);
+  --accent-bg: rgba(34, 211, 238, 0.11);
+  --accent-border: rgba(34, 211, 238, 0.28);
   --danger: #f87171;
   --warning: #fbbf24;
   --success: #4ade80;
   --focus: #22d3ee;
-  --radius: 6px;
-  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-sm: 5px;
   --font-ui: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  --transition: 120ms ease;
-  --header-h: 38px;
-  --activity-w: 46px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  --transition: 140ms ease;
+  --header-h: 40px;
+  --activity-w: 48px;
   --status-h: 24px;
-  --sidebar-w: 260px;
+  --sidebar-w: 270px;
   --panel-h: 220px;
 }
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 body {
-  background: var(--bg-0);
+  background: radial-gradient(1200px 500px at 15% -10%, rgba(34,211,238,0.06), transparent 55%), var(--bg-0);
   color: var(--text);
-  font: 13px/1.4 var(--font-ui);
+  font: 13px/1.45 var(--font-ui);
   overflow: hidden;
+  text-rendering: optimizeLegibility;
 }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.55; }
+::selection { background: rgba(34, 211, 238, 0.22); }
 :focus-visible { outline: 1px solid var(--focus); outline-offset: 1px; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: var(--bg-3); border: 2px solid transparent; background-clip: padding-box; border-radius: 8px; }
+::-webkit-scrollbar-thumb { background: #344455; border: 2px solid transparent; background-clip: padding-box; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #3f5266; background-clip: padding-box; }
 ::-webkit-scrollbar-corner { background: transparent; }
