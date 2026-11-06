@@ -2,56 +2,40 @@
 
 > Your code. Your environment. Your orbit.
 
-ORBIT IDE is an open-source, cross-platform desktop code editor built with **Tauri 2 (Rust)**, **React + TypeScript**, **Monaco Editor**, **SQLite**, the **Git CLI**, and optional **Language Server Protocol** integrations.
+ORBIT IDE is an open-source, cross-platform desktop code editor built with **Tauri 2 (Rust)**, **React + TypeScript**, **Monaco Editor**, **SQLite**, the **Git CLI**, and optional user-configured **LSP** and **local AI** integrations.
 
-## Goals
-- Native desktop application (not a web app wrapper).
-- One shared codebase for Windows, Linux, and macOS.
-- Lightweight behavior for modest hardware (target: i5-6200U, 8 GB RAM).
-- Works offline for ordinary editing; no paid APIs or mandatory cloud accounts.
+## Principles
+- Native desktop app (Tauri), not a web wrapper.
+- Shared codebase for Windows, Linux, and macOS.
+- Offline-capable for ordinary editing.
+- No paid APIs, subscriptions, or mandatory cloud accounts.
+- No silent downloads of language servers or AI models.
 
-## Stack
-- **Backend:** Rust, Tauri 2
-- **Frontend:** React, TypeScript, Vite
-- **Editor:** Monaco Editor
-- **Persistence:** SQLite (via Rust service)
-- **Version control:** Git CLI
-- **Language intelligence:** Configurable LSP (optional, no silent downloads)
-- **Terminal:** PTY-backed integrated terminal via Rust process management
-
-## Repository layout
-```
-orbit-ide/
-  docs/                 Architecture, progress, environment notes
-  src/                  React frontend
-    components/         UI shell and feature components
-    services/           Frontend IPC/service adapters
-    store/              UI/workspace state
-    styles/             Design system and global styles
-  src-tauri/            Rust backend
-    src/
-      services/         Cross-platform filesystem/terminal/git/LSP/settings services
-  .github/workflows/    CI/build automation (planned)
-```
+## Implemented baseline (milestones 1–10 scaffold)
+- **Shell/UI:** Orbit design system, activity bar, sidebar, tabs, bottom panels, status bar.
+- **Filesystem:** open folder dialog, lazy explorer tree, read/write/create/rename/delete commands (Rust).
+- **Editor:** Monaco integration, dirty tracking, save (`Ctrl/Cmd+S`).
+- **Terminal:** Rust PTY sessions (`portable-pty`) + xterm.js, multi-session, resize/kill, workspace cwd.
+- **Git:** status + generic CLI runner; panel for status/fetch/pull/push/stage/unstage/diff/commit/history.
+- **LSP:** optional manual config/start/stop and stdio JSON-RPC event bridge; no auto-install. Full Monaco protocol wiring pending.
+- **Persistence:** SQLite (`rusqlite` bundled) for settings, recent workspaces, session restore.
+- **Extensions/AI:** permissioned extension manifest scaffold (no unrestricted untrusted execution); optional local-only AI adapter (localhost), disabled by default.
+- **CI/Release:** GitHub Actions workflows (checks + Tauri draft release matrix), checksum/install/testing docs. **Artifacts must be built and tested per target platform before claiming support.**
 
 ## Development
-Prerequisites (platform-specific): Rust toolchain, Node.js/npm, Tauri system deps, Git.
-Optional: language servers (user-configured), Ollama (local AI).
+Prerequisites: Rust toolchain, Node.js/npm, Git, and [Tauri v2 system dependencies](https://tauri.app/start/prerequisites/) for your OS.
 
 ```bash
-cd orbit-ide
 npm install
+npm run check            # typecheck + frontend build
+cd src-tauri && cargo check
 npm run tauri dev
 ```
 
-Build:
-```bash
-npm run tauri build
-```
+Useful scripts: `npm run typecheck`, `npm run build`, `npm run test:rust`, `npm run checksums`.
 
-## Environment note (Milestone 1)
-Host checked: Fedora Linux 44, x86_64, Rust 1.99.1, Cargo 1.99.1, Node 22.14.0, npm 10.9.2, Git 2.56.0.
-Missing on this host: Tauri WebKit/GTK dev packages (`webkit2gtk4.1-devel`, `librsvg2-devel`, `libappindicator-gtk3-devel`) and `sqlite3` CLI (SQLite library integration will use Rust crate). GUI `tauri dev/build` requires installing OS prerequisites.
-
-## Status
-Implementation is incremental by milestone. See `docs/progress.md`.
+## Docs
+- `docs/architecture.md` — architecture and module boundaries.
+- `docs/progress.md` — milestone status and verification.
+- `docs/installation.md` — install/checksum guidance.
+- `docs/testing.md` — smoke tests and release verification policy.

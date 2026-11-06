@@ -45,3 +45,12 @@
 - `cargo check`: pass.
 - `npm run typecheck` + `npm run build`: pass (bundle-size warning only).
 - `npx tauri build --debug --no-bundle`: pass → `src-tauri/target/debug/orbit-ide`.
+
+## Milestone 9 — Extensions + optional local AI (baseline scaffolds)
+- **Extensions (permissioned scaffold):** Rust reads manifests from app-data `extensions/*/orbit-extension.json` (`id`, `name`, `version`, `description`, `permissions`, `contributes`), lists/enable-disable state in SQLite. Untrusted extensions are not granted unrestricted filesystem/process access; runtime activation/sandbox execution is intentionally deferred.
+- **Optional local AI:** local-endpoint-only config (`127.0.0.1`/`localhost`/`[::1]`), disabled by default, persisted in SQLite; `ai_complete` calls local provider `/api/generate` (Ollama-style) via `ureq` in blocking task. No paid/cloud APIs required or auto-configured.
+- Frontend: Extensions activity shows manifests/status; Settings shows local AI config/test prompt + LSP entry point.
+
+## Milestone 10 — Packaging/CI/testing (planned baseline next)
+- Add GitHub Actions native-runner workflows for check/build/package, checksums, release artifacts, and install docs.
+- Do not claim platform artifacts are functional without platform builds/tests.

@@ -11,12 +11,23 @@ node_modules
 dist
 dist-ssr
 *.local
+target/
+src-tauri/target/
+.DS_Store
+Thumbs.db
+SHA256SUMS*.txt
+release-artifacts/
+*.AppImage
+*.deb
+*.rpm
+*.dmg
+*.exe
+*.msi
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj

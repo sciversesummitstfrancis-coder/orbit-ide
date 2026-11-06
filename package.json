@@ -2,7 +2,7 @@
   "name": "orbit-ide",
   "private": true,
   "version": "0.1.0",
-  "description": "ORBIT IDE — Your code. Your environment. Your orbit.",
+  "description": "ORBIT IDE \u2014 Your code. Your environment. Your orbit.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,11 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "typecheck": "tsc --noEmit",
-    "lint": "echo 'lint not configured yet'"
+    "lint": "tsc --noEmit",
+    "test": "echo \"frontend unit tests not configured yet; run typecheck/build\"",
+    "test:rust": "cd src-tauri && cargo test",
+    "check": "npm run typecheck && npm run build",
+    "checksums": "bash scripts/checksums.sh"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
