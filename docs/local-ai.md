@@ -1,29 +1,33 @@
-# ORBIT Local AI (Practical Direction)
+# ORBIT AI (Local, Practical v1)
 
-ORBIT does **not** train a frontier foundation model from scratch. That path is unrealistic for this project (data/compute/alignment/cost). ORBIT also does **not** claim to be better than all online coding agents overall.
+ORBIT AI is ORBIT’s **optional local coding assistant**. It is **not** a from-scratch foundation model and does **not** claim to be better than all online coding agents overall. It is designed to be useful for private, on-device ORBIT workflows.
 
-## What ORBIT implements instead
-A **local-first, grounded assistant** that can be more useful for specific ORBIT workflows:
-- **Optional and off by default.**
-- **Local endpoint only:** `127.0.0.1` / `localhost` / `[::1]`. No paid or cloud API required or auto-configured.
-- **Grounded context (user-chosen):** active file excerpt, Git summary, pasted error/diagnostic text, and task-specific prompt.
-- **Advisory output:** suggestions must be reviewed before applying; the model is not trusted as execution authority.
-- **Model-agnostic local runtime:** current baseline targets an Ollama-compatible API (`/api/generate`, `/api/tags`). Users install/run their chosen local model runtime; ORBIT never silently downloads models.
+## Principles
+- **Optional / off by default.** User enables explicitly.
+- **Local endpoint only:** `127.0.0.1`, `localhost`, `[::1]`. No paid or cloud API required or auto-configured.
+- **No silent downloads:** ORBIT never downloads language servers or AI models.
+- **Grounded context:** only user-chosen local context is sent (Monaco selection or active file excerpt, Git status summary, pasted error/diagnostic text, task/prompt).
+- **Advisory:** responses are suggestions. Review before applying. “Apply Suggestion” replaces the active editor buffer only after confirmation and does not save to disk until the user saves.
 
-## Good tasks for local models
-- Explain selected code or active file behavior.
-- Explain a pasted error/terminal/diagnostic message.
-- Suggest a minimal, safe refactor.
-- Draft a commit message from visible Git context.
-- Generate concise docs/comments for local code.
+## Current v1 features
+- Settings UI: enable/disable, local endpoint/model config, model discovery (Ollama-compatible `/api/tags`), persisted in SQLite.
+- Tasks: Explain Code, Explain Error, Suggest Refactor, Draft Commit, Generate Docs, Custom.
+- Context wiring: Monaco selection capture, active file excerpt, structured Git status summary, optional pasted error text.
+- Local provider API: Ollama-compatible `/api/generate` (`stream:false` baseline).
 
-## Hardware reality
-On modest hardware (target baseline i5-6200U / 8 GB), prefer small local coding models and concise context. Large models may be slow or unusable; task scoping and truncation matter.
+## Good fit
+- Explain selected code / local behavior.
+- Explain pasted terminal, compiler, or diagnostic errors.
+- Draft commit messages from visible Git changes.
+- Suggest minimal refactors or docs (review required).
 
-## Future improvements
-- Selection-aware prompts from Monaco.
-- Diagnostics/LSP and structured Git diff context.
-- Streaming responses and cancellation.
-- Explicit review/apply flow for suggested edits.
-- Local benchmark suite for latency/quality on target hardware.
-- Optional fine-tuning/distillation workflow only with permission-safe/licensed data.
+## Hardware guidance
+Target baseline includes modest hardware (e.g. i5-6200U / 8 GB). Prefer small local coding models and concise context. Large models may be slow or fail on limited RAM.
+
+## Next steps (not implemented)
+- True streaming/cancel tokens in UI.
+- Structured LSP diagnostics and full diff hunks as context.
+- Safer patch-apply flow (unified diff/selection patch, not whole-file replacement where avoidable).
+- Runtime detection for Ollama without auto-install/download.
+- Local eval suite (latency, RAM, quality) on target hardware.
+- Fine-tuning/distillation only with permission-safe/licensed data and measured results.
