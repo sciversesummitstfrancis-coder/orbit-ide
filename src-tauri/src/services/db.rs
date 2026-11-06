@@ -14,7 +14,10 @@ pub fn init(app: &AppHandle) -> Result<DbState, String> {
         "PRAGMA journal_mode=WAL;
          CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
          CREATE TABLE IF NOT EXISTS recent_workspaces (path TEXT PRIMARY KEY, name TEXT NOT NULL, opened_at INTEGER NOT NULL);
-         CREATE TABLE IF NOT EXISTS session_state (id INTEGER PRIMARY KEY CHECK (id = 1), root TEXT, active_path TEXT, open_files TEXT NOT NULL DEFAULT '[]');",
+         CREATE TABLE IF NOT EXISTS session_state (id INTEGER PRIMARY KEY CHECK (id = 1), root TEXT, active_path TEXT, open_files TEXT NOT NULL DEFAULT '[]');
+         CREATE TABLE IF NOT EXISTS receipts (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, category TEXT NOT NULL, action TEXT NOT NULL, summary TEXT NOT NULL, detail TEXT, status TEXT NOT NULL, workspace TEXT, duration_ms INTEGER);
+         CREATE INDEX IF NOT EXISTS idx_receipts_ts ON receipts(ts DESC);
+         CREATE INDEX IF NOT EXISTS idx_receipts_cat ON receipts(category, ts DESC);",
     ).map_err(|e| format!("sqlite init: {e}"))?;
     conn.execute("INSERT OR IGNORE INTO session_state (id, open_files) VALUES (1, '[]')", []).map_err(|e| e.to_string())?;
     Ok(DbState(Mutex::new(conn)))

@@ -8,6 +8,7 @@ import TerminalPanel from "./components/TerminalPanel";
 import GitPanel from "./components/GitPanel";
 import LspPanel from "./components/LspPanel";
 import ExtensionsAiPanel from "./components/ExtensionsAiPanel";
+import ReceiptsPanel from "./components/ReceiptsPanel";
 import Splash from "./components/Splash";
 import { DebugIcon, ExplorerIcon, ExtensionsIcon, GitIcon, OrbitMark, RefreshIcon, SaveIcon, SearchIcon, SettingsIcon } from "./components/Icons";
 import { orbit, workspaceApi, type RecentWorkspace } from "./services/orbit";
@@ -15,7 +16,7 @@ import { checkForUpdate, getUpdaterConfig, setUpdaterConfig } from "./services/u
 import { useWorkspace } from "./store/workspace";
 
 type Activity = "explorer" | "search" | "git" | "extensions" | "debug" | "settings";
-type PanelTab = "terminal" | "problems" | "output" | "debug" | "git-history";
+type PanelTab = "terminal" | "problems" | "output" | "debug" | "git-history" | "receipts";
 const activities: { id: Activity; label: string; icon: (p: { width?: number; height?: number }) => ReactElement }[] = [
   { id: "explorer", label: "Explorer", icon: ExplorerIcon },
   { id: "search", label: "Search", icon: SearchIcon },
@@ -178,7 +179,7 @@ export default function App() {
           </div>
           <div className={`bottom ${panelOpen ? "" : "collapsed"}`} style={panelOpen ? { height: panelH } : undefined}>
             <div className="panel-tabs" role="tablist" aria-label="Panel tabs" onDoubleClick={() => setPanelOpen((v) => !v)}>
-              {(["terminal", "problems", "output", "debug", "git-history"] as PanelTab[]).map((t) => <button key={t} type="button" className={`panel-tab ${panel === t ? "active" : ""}`} onClick={() => { setPanel(t); setPanelOpen(true); }}>{{ terminal: "Terminal", problems: "Problems", output: "Output", debug: "Debug Console", "git-history": "Git History" }[t]}</button>)}
+              {(["terminal", "problems", "output", "debug", "git-history", "receipts"] as PanelTab[]).map((t) => <button key={t} type="button" className={`panel-tab ${panel === t ? "active" : ""}`} onClick={() => { setPanel(t); setPanelOpen(true); }}>{{ terminal: "Terminal", problems: "Problems", output: "Output", debug: "Debug Console", "git-history": "Git History", receipts: "Receipts" }[t]}</button>)}
               <div className="panel-toolbar-actions">
                 <button type="button" className="icon-btn" title={panelOpen ? "Collapse panel" : "Expand panel"} onClick={() => setPanelOpen((v) => !v)}>{panelOpen ? "▾" : "▴"}</button>
                 <button type="button" className="icon-btn" title={panelH > 420 ? "Restore panel size" : "Maximize panel"} onClick={() => { setPanelOpen(true); setPanelH((h) => h > 420 ? 240 : Math.min(760, Math.floor(window.innerHeight * 0.62))); }}>{panelH > 420 ? "❐" : "□"}</button>
@@ -189,6 +190,7 @@ export default function App() {
               {panel === "terminal" ? <div className="panel-view"><TerminalPanel cwd={ws.root} expanded={panelH > 420} /></div>
                : panel === "git-history" ? <div className="panel-view"><GitPanel root={ws.root} onChanged={() => { void refreshGit(); void refreshExplorer(); }} /></div>
                : panel === "problems" ? <div className="panel-view"><LspPanel /></div>
+               : panel === "receipts" ? <div className="panel-view"><ReceiptsPanel /></div>
                : <div className="panel-body panel-view">{panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") : "Debug console is planned for a later milestone."}</div>}
             </div>
           </div>

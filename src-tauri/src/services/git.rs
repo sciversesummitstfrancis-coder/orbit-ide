@@ -1,6 +1,10 @@
 use serde::Serialize;
+use serde_json::json;
 use std::path::Path;
 use std::process::Command;
+use std::time::Instant;
+use tauri::State;
+use crate::services::db::DbState;
 
 fn git(dir: &str, args: &[&str]) -> Result<String, String> {
     let out = Command::new("git").arg("-C").arg(dir).args(args).output().map_err(|e| format!("git: {e}"))?;
@@ -42,7 +46,15 @@ pub async fn git_status(path: String) -> Result<GitStatus, String> {
 }
 
 #[tauri::command]
-pub async fn git_run(path: String, args: Vec<String>) -> Result<String, String> {
+pub async fn git_run(state: State<'_, DbState>, path: String, args: Vec<String>) -> Result<String, String> {
+    let start = Instant::now();
     let refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-    git(&path, &refs)
+    let result = git(&path, &refs);
+    let ms = start.elapsed().as_millis() as i64;
+    let (status, summary, detail) = match &result {
+        Ok(out) => ("ok", format!("git {}", args.first().map(|s| s.as_str()).unwrap_or("")), json!({"args": args, "output_preview": out.chars().take(500).collect::<String>()})),
+        Err(e) => ("error", format!("git {} failed", args.first().map(|s| s.as_str()).unwrap_or("")), json!({"args": args, "error": e.chars().take(800).collect::<String>()})),
+    };
+    crate::services::receipts::try_record(&state, "git", "run", &summary, Some(&detail), status, Some(&path), Some(ms));
+    result
 }

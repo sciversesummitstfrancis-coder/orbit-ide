@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::fs;
 use std::path::PathBuf;
+use tauri::State;
+use crate::services::db::DbState;
 
 #[derive(Deserialize)]
 pub struct ListDirReq { pub path: String }
@@ -23,9 +26,16 @@ pub async fn fs_read_file(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn fs_write_file(req: WriteFileReq) -> Result<(), String> {
+pub async fn fs_write_file(state: State<'_, DbState>, req: WriteFileReq) -> Result<(), String> {
     if let Some(parent) = PathBuf::from(&req.path).parent() { fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
-    fs::write(&req.path, req.content).map_err(|e| format!("write_file {}: {e}", req.path))
+    let bytes = req.content.len();
+    let path = req.path.clone();
+    let res = fs::write(&req.path, req.content).map_err(|e| format!("write_file {}: {e}", req.path));
+    let (status, err) = match &res { Ok(_) => ("ok", None), Err(e) => ("error", Some(e.clone())) };
+    let mut detail = json!({"path": path, "bytes": bytes});
+    if let Some(e) = err { detail["error"] = json!(e); }
+    crate::services::receipts::try_record(&state, "file", "save", &format!("Saved {}", PathBuf::from(&detail["path"].as_str().unwrap_or("")).file_name().and_then(|s| s.to_str()).unwrap_or("file")), Some(&detail), status, detail["path"].as_str(), None);
+    res
 }
 
 #[tauri::command]

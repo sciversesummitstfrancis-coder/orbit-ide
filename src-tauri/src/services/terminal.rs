@@ -1,11 +1,13 @@
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::sync::Mutex;
 use std::thread;
 use tauri::{AppHandle, Emitter, State};
 use uuid::Uuid;
+use crate::services::db::DbState;
 
 #[derive(Default)]
 pub struct TerminalState(pub Mutex<HashMap<String, TerminalSession>>);
@@ -43,14 +45,14 @@ fn default_shell() -> String {
 }
 
 #[tauri::command]
-pub async fn terminal_create(app: AppHandle, state: State<'_, TerminalState>, req: CreateReq) -> Result<TermInfo, String> {
+pub async fn terminal_create(app: AppHandle, state: State<'_, TerminalState>, db: State<'_, DbState>, req: CreateReq) -> Result<TermInfo, String> {
     let pty_system = native_pty_system();
     let pair = pty_system.openpty(PtySize {
         rows: req.rows.unwrap_or(24).max(2), cols: req.cols.unwrap_or(80).max(2),
         pixel_width: 0, pixel_height: 0,
     }).map_err(|e| format!("pty open failed: {e}"))?;
     let mut cmd = CommandBuilder::new(default_shell());
-    if let Some(cwd) = req.cwd.filter(|s| !s.trim().is_empty()) { cmd.cwd(cwd); }
+    if let Some(cwd) = req.cwd.as_ref().filter(|s| !s.trim().is_empty()) { cmd.cwd(cwd); }
     cmd.env("TERM", "xterm-256color");
     cmd.env("COLORTERM", "truecolor");
     #[cfg(not(windows))]
@@ -77,7 +79,10 @@ pub async fn terminal_create(app: AppHandle, state: State<'_, TerminalState>, re
         }
         let _ = app_emit.emit("terminal://exit", TermExit { id: id_emit, code: None });
     });
+    let cwd = req.cwd.clone();
+    let shell = default_shell();
     state.0.lock().map_err(|_| "terminal state lock")?.insert(id.clone(), TerminalSession { writer, master: pair.master, child });
+    crate::services::receipts::try_record(&db, "terminal", "create", &format!("Opened terminal ({})", shell.split('/').last().unwrap_or(&shell)), Some(&json!({"id": id, "cwd": cwd, "shell": shell})), "ok", cwd.as_deref(), None);
     Ok(TermInfo { id })
 }
 
@@ -100,9 +105,10 @@ pub async fn terminal_resize(state: State<'_, TerminalState>, req: ResizeReq) ->
 }
 
 #[tauri::command]
-pub async fn terminal_kill(state: State<'_, TerminalState>, id: String) -> Result<(), String> {
+pub async fn terminal_kill(state: State<'_, TerminalState>, db: State<'_, DbState>, id: String) -> Result<(), String> {
     let mut lock = state.0.lock().map_err(|_| "lock")?;
-    if let Some(mut s) = lock.remove(&id) { let _ = s.child.kill(); }
+    let existed = lock.remove(&id).map(|mut s| { let _ = s.child.kill(); true }).unwrap_or(false);
+    crate::services::receipts::try_record(&db, "terminal", "kill", &format!("Closed terminal {}", &id[..8.min(id.len())]), Some(&json!({"id": id, "existed": existed})), if existed {"ok"} else {"warn"}, None, None);
     Ok(())
 }
 

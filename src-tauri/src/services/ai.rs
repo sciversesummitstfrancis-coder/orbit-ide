@@ -3,6 +3,7 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::sync::{atomic::{AtomicBool, Ordering}, Arc, Mutex};
+use std::time::Instant;
 use tauri::{AppHandle, Emitter, State};
 use crate::services::db::DbState;
 
@@ -124,15 +125,25 @@ pub async fn ai_run_task(db: State<'_, DbState>, ctx: AiContext) -> Result<Value
     if !cfg.enabled { return Err("Local AI is disabled. Enable it in Settings and configure a local model endpoint (e.g. Ollama).".into()); }
     if cfg.model.trim().is_empty() { return Err("No local AI model configured.".into()); }
     if !is_local_endpoint(&cfg.endpoint) { return Err("Only local endpoints are allowed.".into()); }
+    let task_name = ctx.task.clone().unwrap_or_else(|| "custom".into());
+    let active_path = ctx.active_path.clone();
     let prompt = build_prompt(&ctx);
     let endpoint = format!("{}/api/generate", cfg.endpoint.trim_end_matches('/'));
     let model = cfg.model.clone();
-    tauri::async_runtime::spawn_blocking(move || -> Result<Value, String> {
+    let start = Instant::now();
+    let result = tauri::async_runtime::spawn_blocking(move || -> Result<Value, String> {
         let r = ureq::post(&endpoint).set("Content-Type", "application/json")
             .send_json(json!({"model": model, "prompt": prompt, "stream": false}))
             .map_err(|e| format!("local AI request failed: {e}. Ensure the local provider is running."))?;
         r.into_json::<Value>().map_err(|e| e.to_string())
-    }).await.map_err(|e| e.to_string())?
+    }).await.map_err(|e| e.to_string())?;
+    let ms = start.elapsed().as_millis() as i64;
+    let (status, detail) = match &result {
+        Ok(v) => ("ok", json!({"task": task_name, "model": cfg.model, "response_chars": v.get("response").and_then(|r| r.as_str()).map(|s| s.len()).unwrap_or(0)})),
+        Err(e) => ("error", json!({"task": task_name, "model": cfg.model, "error": e.chars().take(500).collect::<String>()})),
+    };
+    crate::services::receipts::try_record(&db, "ai", "run_task", &format!("AI task: {}", detail["task"].as_str().unwrap_or("custom")), Some(&detail), status, active_path.as_deref(), Some(ms));
+    result
 }
 
 #[tauri::command]

@@ -1,5 +1,5 @@
 mod services;
-use services::{ai, db, extensions, filesystem, git, lsp, settings, terminal, workspace};
+use services::{ai, db, extensions, filesystem, git, lsp, receipts, settings, terminal, workspace};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -39,6 +39,7 @@ pub fn run() {
             lsp::lsp_stop,
             workspace::workspace_add_recent,
             workspace::workspace_list_recent,
+            workspace::workspace_remove_recent,
             workspace::session_save,
             workspace::session_restore,
             extensions::extensions_list,
@@ -52,6 +53,9 @@ pub fn run() {
             ai::ai_complete,
             ai::ai_run_task,
             ai::ai_stream_task,
+            receipts::receipts_list,
+            receipts::receipts_clear,
+            receipts::receipts_summary,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ORBIT IDE");

@@ -41,3 +41,8 @@ ORBIT IDE has functional local baselines for Milestones 1–10 on Fedora/Linux (
 - `cargo check --manifest-path src-tauri/Cargo.toml`: pass.
 - `npx tsc --noEmit`: pass.
 - Previous verified in session history: `npm run typecheck`, `npm run build`, `cargo test` (0 tests), debug Tauri build on Fedora host. Re-run full checks before release claims.
+
+## Command Receipts (new differentiator baseline)
+- Local SQLite `receipts` table records file save, git command, terminal create/kill, and local AI task metadata (no cloud, capped ~2000 rows).
+- Bottom panel **Receipts** tab provides category/search/workspace filters, detail inspection, copy, open-file, and confirm-before-replay for git commands.
+- Privacy/safety: no keystrokes, PTY output, full file contents, prompts, or model responses stored by default. See `docs/command-receipts.md`.
