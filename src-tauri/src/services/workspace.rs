@@ -27,6 +27,7 @@ pub async fn workspace_list_recent(state: State<'_, DbState>) -> Result<Vec<Rece
 }
 
 #[tauri::command]
+#[allow(dead_code)] // referenced via tauri::generate_handler
 pub async fn workspace_remove_recent(state: State<'_, DbState>, path: String) -> Result<(), String> {
     let conn = state.0.lock().map_err(|_| "db lock")?;
     conn.execute("DELETE FROM recent_workspaces WHERE path=?1", params![path]).map_err(|e| e.to_string())?;
