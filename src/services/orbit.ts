@@ -12,7 +12,8 @@ export type ExtensionManifest = { id: string; name: string; version: string; des
 export type ExtensionInfo = { manifest: ExtensionManifest; path: string; enabled: boolean; trusted: boolean };
 export type AiConfig = { enabled: boolean; provider: string; endpoint: string; model: string };
 export type AiTask = "explain_code" | "explain_error" | "suggest_refactor" | "draft_commit" | "generate_docs" | "custom";
-export type AiContext = { task?: AiTask; prompt?: string; active_path?: string | null; active_content?: string | null; selection?: string | null; git_summary?: string | null; error_text?: string | null };
+export type AiContext = { task?: AiTask; prompt?: string; active_path?: string | null; active_content?: string | null; selection?: string | null; git_summary?: string | null; git_diff?: string | null; diagnostics?: string | null; error_text?: string | null };
+export type AiChunk = { id: string; chunk: string; done: boolean; error?: string | null };
 
 export const orbit = {
   listDir: (path: string) => invoke<DirEntry[]>("fs_list_dir", { req: { path } }),
@@ -52,6 +53,10 @@ export const m9Api = {
   aiGetConfig: () => invoke<AiConfig>("ai_get_config"),
   aiSetConfig: (config: AiConfig) => invoke<void>("ai_set_config", { config }),
   aiListModels: () => invoke<string[]>("ai_list_models"),
+  aiCheckRuntime: () => invoke<any>("ai_check_runtime"),
+  aiCancel: (id: string) => invoke<void>("ai_cancel", { id }),
   aiComplete: (prompt: string) => invoke<any>("ai_complete", { prompt }),
   aiRunTask: (ctx: AiContext) => invoke<any>("ai_run_task", { ctx }),
+  aiStreamTask: (ctx: AiContext) => invoke<string>("ai_stream_task", { ctx }),
+  onAiChunk: (cb: (p: AiChunk) => void): Promise<UnlistenFn> => listen("ai://chunk", (e) => cb(e.payload as any)),
 };

@@ -12,6 +12,7 @@ pub fn run() {
         })
         .manage(terminal::TerminalState::default())
         .manage(lsp::LspState::default())
+        .manage(ai::AiStreamState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
@@ -44,8 +45,11 @@ pub fn run() {
             ai::ai_get_config,
             ai::ai_set_config,
             ai::ai_list_models,
+            ai::ai_check_runtime,
+            ai::ai_cancel,
             ai::ai_complete,
             ai::ai_run_task,
+            ai::ai_stream_task,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ORBIT IDE");
