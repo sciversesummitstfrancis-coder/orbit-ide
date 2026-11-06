@@ -5,6 +5,7 @@ import "./styles/app.css";
 import Explorer from "./components/Explorer";
 import OrbitEditor from "./components/Editor";
 import TerminalPanel from "./components/TerminalPanel";
+import GitPanel from "./components/GitPanel";
 import { orbit } from "./services/orbit";
 import { useWorkspace } from "./store/workspace";
 
@@ -92,7 +93,7 @@ export default function App() {
           </div>
           <div className="sidebar-body">
             {activity === "explorer" ? <Explorer onOpenFolder={openFolder} /> :
-             activity === "git" ? <div style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{ws.git?.is_repo ? `Branch: ${ws.git.branch || "(detached)"}\nChanged: ${ws.git.changed.length}\n\n${ws.git.changed.map((c) => `${c.staged ? "S" : " "} ${c.status} ${c.path}`).join("\n") || "Working tree clean."}` : "No Git repository detected in this workspace."}</div> :
+             activity === "git" ? <div style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{ws.git?.is_repo ? `Branch: ${ws.git.branch || "(detached)"}\nChanged: ${ws.git.changed.length}\n\n${ws.git.changed.slice(0, 30).map((c) => `${c.staged ? "S" : " "} ${c.status} ${c.path}`).join("\n") || "Working tree clean."}\n\nOpen the Git History/changes panel below for stage, commit, diff, and history.` : "No Git repository detected in this workspace."}</div> :
              activity === "search" ? <div className="empty-state"><p>Workspace search is planned for Milestone 8.</p><p style={{ fontSize: 12 }}>Use file open and Git status for now.</p></div> :
              <div className="empty-state"><p>{activities.find((a) => a.id === activity)?.label} is planned for a later milestone.</p></div>}
             {error ? <div style={{ marginTop: 10, color: "var(--danger)", whiteSpace: "pre-wrap", fontSize: 12 }}>{error}</div> : null}
@@ -142,10 +143,11 @@ export default function App() {
             </div>
             {panel === "terminal" ? (
               <div style={{ minHeight: 0, height: "100%" }}><TerminalPanel cwd={ws.root} /></div>
+            ) : panel === "git-history" ? (
+              <div style={{ minHeight: 0, height: "100%" }}><GitPanel root={ws.root} onChanged={() => { void refreshGit(); void refreshExplorer(); }} /></div>
             ) : (
               <div className="panel-body">
-                {panel === "git-history" ? (ws.root ? "Git history view is planned for Milestone 6. The Source Control sidebar shows current branch and changed files." : "Open a workspace to inspect Git history.") :
-                 panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") :
+                {panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") :
                  panel === "problems" ? "Diagnostics and LSP problems are planned for Milestone 7." :
                  "Debug console is planned for a later milestone."}
               </div>
