@@ -12,7 +12,7 @@ const ORBIT_THEME = {
   brightBlack: "#4f6478", brightWhite: "#f3f8fc",
 };
 
-export default function TerminalPanel({ cwd }: { cwd: string | null }) {
+export default function TerminalPanel({ cwd, expanded = false }: { cwd: string | null; expanded?: boolean }) {
   const [sessions, setSessions] = useState<{ id: string; label: string }[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,95 +22,65 @@ export default function TerminalPanel({ cwd }: { cwd: string | null }) {
   const initRef = useRef(false);
 
   function fitSession(id: string) {
-    const s = sessionsRef.current.get(id);
-    const host = hostRef.current;
+    const s = sessionsRef.current.get(id); const host = hostRef.current;
     if (!s || !host || s.wrap.style.display === "none") return;
     if (host.clientWidth < 20 || host.clientHeight < 20) return;
     try { s.fit.fit(); void orbit.termResize(id, Math.max(2, s.term.cols), Math.max(2, s.term.rows)).catch(() => {}); } catch {}
   }
+  function fitActiveSoon() { if (activeId) [0, 40, 120, 220].forEach((ms) => setTimeout(() => fitSession(activeId), ms)); }
+  function activeSession() { return activeId ? sessionsRef.current.get(activeId) || null : null; }
 
   async function createSession() {
-    const host = hostRef.current;
-    if (!host) return;
+    const host = hostRef.current; if (!host) return;
     try {
       setError(null);
       const info = await orbit.termCreate(cwd, 80, 24);
       if (!hostRef.current) { void orbit.termKill(info.id).catch(() => {}); return; }
       if (sessionsRef.current.has(info.id)) return;
       labelRef.current += 1;
-      const term = new Terminal({
-        cursorBlink: true, fontFamily: '"JetBrains Mono","Cascadia Code","Fira Code",Consolas,monospace',
-        fontSize: 13, lineHeight: 1.2, theme: ORBIT_THEME, scrollback: 5000, allowProposedApi: false,
-      });
-      const fit = new FitAddon();
-      term.loadAddon(fit);
+      const term = new Terminal({ cursorBlink: true, fontFamily: '"JetBrains Mono","Cascadia Code","Fira Code",Consolas,monospace', fontSize: 13, lineHeight: 1.2, theme: ORBIT_THEME, scrollback: 8000, allowProposedApi: false });
+      const fit = new FitAddon(); term.loadAddon(fit);
       term.onData((data) => { void orbit.termWrite(info.id, data).catch((e) => setError(String(e))); });
-
       const wrap = document.createElement("div");
       wrap.style.cssText = "position:absolute;inset:0;display:none;padding:4px 0 0 8px;overflow:hidden;background:#11161c;";
-      host.appendChild(wrap);
-      term.open(wrap);
+      host.appendChild(wrap); term.open(wrap);
       const session: Session = { id: info.id, term, fit, wrap };
       sessionsRef.current.set(info.id, session);
       setSessions((s) => s.some((x) => x.id === info.id) ? s : [...s, { id: info.id, label: `Terminal ${labelRef.current}` }]);
       setActiveId(info.id);
-
-      const ro = new ResizeObserver(() => fitSession(info.id));
-      ro.observe(host);
-      session.ro = ro;
-      [0, 50, 150].forEach((ms) => setTimeout(() => { fitSession(info.id); if (ms === 150) term.focus(); }, ms));
+      const ro = new ResizeObserver(() => fitSession(info.id)); ro.observe(host); session.ro = ro;
+      fitActiveSoon(); setTimeout(() => term.focus(), 120);
     } catch (e) {
       const msg = String(e);
       setError(msg.includes("__TAURI") || msg.includes("invoke") ? "Terminal requires the ORBIT desktop app (npm run tauri dev). It cannot run in a plain browser tab." : msg);
     }
   }
-
   async function killActive() {
     if (!activeId) return;
     await orbit.termKill(activeId).catch(() => {});
-    const s = sessionsRef.current.get(activeId);
-    s?.ro?.disconnect(); s?.term.dispose(); s?.wrap.remove(); sessionsRef.current.delete(activeId);
-    setSessions((list) => {
-      const next = list.filter((x) => x.id !== activeId);
-      setActiveId((cur) => (cur === activeId ? next[next.length - 1]?.id ?? null : cur));
-      return next;
-    });
+    const s = sessionsRef.current.get(activeId); s?.ro?.disconnect(); s?.term.dispose(); s?.wrap.remove(); sessionsRef.current.delete(activeId);
+    setSessions((list) => { const next = list.filter((x) => x.id !== activeId); setActiveId((cur) => (cur === activeId ? next[next.length - 1]?.id ?? null : cur)); return next; });
   }
+  function clearActive() { const s = activeSession(); if (s) s.term.clear(); }
 
   useEffect(() => {
     let unData: (() => void) | undefined, unExit: (() => void) | undefined, disposed = false;
-    orbit.onTermData(({ id, data }) => { if (!disposed) sessionsRef.current.get(id)?.term.write(data); })
-      .then((u) => { if (disposed) u(); else unData = u; }).catch(() => {});
-    orbit.onTermExit(({ id }) => { if (!disposed) sessionsRef.current.get(id)?.term.write("\r\n\x1b[90m[process exited]\x1b[0m\r\n"); })
-      .then((u) => { if (disposed) u(); else unExit = u; }).catch(() => {});
-    return () => {
-      disposed = true; unData?.(); unExit?.();
-      sessionsRef.current.forEach((s) => { s.ro?.disconnect(); s.term.dispose(); s.wrap.remove(); void orbit.termKill(s.id).catch(() => {}); });
-      sessionsRef.current.clear();
-    };
+    orbit.onTermData(({ id, data }) => { if (!disposed) sessionsRef.current.get(id)?.term.write(data); }).then((u) => { if (disposed) u(); else unData = u; }).catch(() => {});
+    orbit.onTermExit(({ id }) => { if (!disposed) sessionsRef.current.get(id)?.term.write("\r\n\x1b[90m[process exited]\x1b[0m\r\n"); }).then((u) => { if (disposed) u(); else unExit = u; }).catch(() => {});
+    return () => { disposed = true; unData?.(); unExit?.(); sessionsRef.current.forEach((s) => { s.ro?.disconnect(); s.term.dispose(); s.wrap.remove(); void orbit.termKill(s.id).catch(() => {}); }); sessionsRef.current.clear(); };
   }, []);
-
-  useEffect(() => {
-    sessionsRef.current.forEach((s, id) => {
-      const active = id === activeId;
-      s.wrap.style.display = active ? "block" : "none";
-      if (active) { fitSession(id); s.term.focus(); }
-    });
-  }, [activeId, sessions.length]);
-
+  useEffect(() => { sessionsRef.current.forEach((s, id) => { const active = id === activeId; s.wrap.style.display = active ? "block" : "none"; if (active) { fitSession(id); s.term.focus(); } }); }, [activeId, sessions.length]);
+  useEffect(() => { fitActiveSoon(); }, [expanded]);
   useEffect(() => { if (initRef.current) return; initRef.current = true; void createSession(); }, []);
 
   return (
-    <div className="terminal-panel">
+    <div className={`terminal-panel ${expanded ? "maxlike" : ""}`}>
       <div className="terminal-toolbar">
-        <div className="terminal-tabs">
-          {sessions.map((s) => (
-            <button key={s.id} type="button" className={`panel-tab ${activeId === s.id ? "active" : ""}`} onClick={() => setActiveId(s.id)}>{s.label}</button>
-          ))}
-        </div>
+        <div className="terminal-tabs">{sessions.map((s) => <button key={s.id} type="button" className={`panel-tab ${activeId === s.id ? "active" : ""}`} onClick={() => setActiveId(s.id)}>{s.label}</button>)}</div>
         <button type="button" className="icon-btn" title="New terminal" onClick={() => void createSession()}>+</button>
+        <button type="button" className="icon-btn" title="Clear terminal" onClick={clearActive} disabled={!activeId}>⌫</button>
         <button type="button" className="icon-btn" title="Kill terminal" onClick={() => void killActive()} disabled={!activeId}>×</button>
-        <span className="terminal-meta">{cwd ? cwd.split(/[/\\]/).filter(Boolean).pop() || cwd : "shell"}</span>
+        <span className="terminal-meta" title={cwd || ""}>{cwd ? cwd.split(/[/\\]/).filter(Boolean).pop() || cwd : "shell"}</span>
       </div>
       <div className="terminal-host" ref={hostRef} />
       {error ? <div className="terminal-error">{error}</div> : null}

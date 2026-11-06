@@ -26,10 +26,16 @@ sha256sum -c SHA256SUMS.txt  # Linux
 shasum -a 256 -c SHA256SUMS.txt  # macOS
 ```
 
+## Updates
+Auto-update is opt-in and disabled by default. See `docs/updates.md` for Tauri updater signing keys, endpoints, and release setup. The source config ships with the updater inactive until real release infrastructure is configured.
+
 ## Local development
 ```bash
 cd orbit-ide
 npm install
 npm run tauri dev
+# or, if port 1420 is held by a stale ORBIT dev process:
+npm run dev:desktop   # stops stale ORBIT vite/tauri debug processes, then runs tauri dev
+npm run dev:clean     # only stop stale ORBIT dev processes
 ```
 Requires Rust toolchain, Node.js/npm, Git, and platform Tauri prerequisites.

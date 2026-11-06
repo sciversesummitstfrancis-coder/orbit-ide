@@ -90,7 +90,7 @@
 .btn.primary:hover:not(:disabled) { background: linear-gradient(180deg, rgba(34,211,238,.24), rgba(34,211,238,.13)); }
 .hint { margin-top: 14px; font-size: 12px; color: var(--text-faint); }
 .hint code { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); background: var(--bg-2); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border-subtle); }
-.bottom { height: var(--panel-h); min-height: 140px; max-height: 55vh; background: var(--bg-1); border-top: 1px solid var(--border-subtle); display: grid; grid-template-rows: 34px minmax(0,1fr); overflow: hidden; }
+.bottom { min-height: 140px; background: var(--bg-1); border-top: 1px solid var(--border-subtle); display: grid; grid-template-rows: 34px minmax(0,1fr); overflow: hidden; }
 .bottom > * { min-height: 0; min-width: 0; }
 .panel-tabs { display: flex; gap: 2px; padding: 0 8px; align-items: stretch; border-bottom: 1px solid var(--border-subtle); min-width: 0; overflow-x: auto; }
 .panel-tab {
@@ -146,3 +146,60 @@
 .tree-badge.rs { color: #fdba74; border-color: rgba(251,146,60,.2); }
 .tree-badge.json { color: #fde68a; border-color: rgba(251,191,36,.2); }
 .tree-badge.md { color: #c4b5fd; border-color: rgba(167,139,250,.2); }
+
+.resize-handle-y { height: 6px; cursor: ns-resize; background: transparent; border-top: 1px solid transparent; position: relative; z-index: 5; }
+.resize-handle-y:hover, .resize-handle-y.active { background: rgba(34,211,238,.08); border-top-color: rgba(34,211,238,.18); }
+.resize-handle-y::after { content: ""; position: absolute; left: 50%; top: 1px; width: 42px; height: 2px; transform: translateX(-50%); border-radius: 999px; background: var(--border-subtle); }
+.bottom.collapsed { grid-template-rows: 34px 0; min-height: 34px; }
+.bottom.collapsed .panel-content { display: none; }
+.panel-content { min-height: 0; min-width: 0; overflow: hidden; }
+.panel-toolbar-actions { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.collapse { border: 1px solid var(--border-subtle); border-radius: 10px; background: rgba(255,255,255,.015); margin-top: 10px; overflow: hidden; }
+.collapse-head { width: 100%; display: flex; align-items: center; gap: 8px; padding: 9px 10px; background: transparent; border: 0; color: var(--text); text-align: left; }
+.collapse-head:hover { background: rgba(255,255,255,.02); }
+.collapse-chev { color: var(--text-faint); width: 12px; flex: 0 0 auto; }
+.collapse-title { font-size: 12px; font-weight: 600; }
+.collapse-right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.collapse-body { padding: 0 10px 10px; min-width: 0; }
+.ai-panel { height: 100%; overflow: auto; padding: 12px; }
+.ai-output { min-height: 120px; max-height: 42vh; resize: vertical; overflow: auto; margin-top: 10px; }
+.ai-output.expanded { max-height: none; min-height: 320px; }
+.ai-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; position: sticky; bottom: 0; padding: 8px 0 2px; background: linear-gradient(180deg, transparent, var(--bg-1) 35%); }
+.terminal-toolbar .icon-btn { height: 24px; min-width: 24px; padding: 0 6px; }
+.terminal-panel.maxlike .terminal-host { padding-bottom: 2px; }
+
+/* Splash */
+.splash { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; overflow: hidden; background: radial-gradient(1200px 700px at 50% 45%, #18222c 0%, #0f1419 48%, #0b1014 100%); color: #e8f4ff; cursor: pointer; transition: opacity .42s ease, visibility .42s ease; }
+.splash-in { opacity: 0; animation: splash-fade .42s ease forwards; }
+.splash-hold { opacity: 1; }
+.splash-out { opacity: 0; visibility: hidden; pointer-events: none; }
+@keyframes splash-fade { to { opacity: 1; } }
+.splash-bg::before, .splash-bg::after { content: ""; position: absolute; inset: -20%; pointer-events: none; }
+.splash-bg::before { background: radial-gradient(circle at 50% 48%, rgba(34,211,238,.10), transparent 26%), radial-gradient(circle at 30% 30%, rgba(94,234,212,.06), transparent 18%); filter: blur(10px); }
+.splash-bg::after { background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px); background-size: 26px 26px; opacity: .12; mask-image: radial-gradient(circle at center, black 35%, transparent 75%); }
+.splash-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 22px; transform-style: preserve-3d; transition: transform .12s ease-out; will-change: transform; }
+.splash-atom { position: relative; width: 220px; height: 220px; transform-style: preserve-3d; }
+.nucleus { position: absolute; inset: 0; display: grid; place-items: center; }
+.nucleus span { width: 22px; height: 22px; border-radius: 999px; background: radial-gradient(circle at 35% 30%, #f0fdff, #67e8f9 38%, #0891b2 72%, #155e75); box-shadow: 0 0 0 8px rgba(34,211,238,.08), 0 0 28px rgba(34,211,238,.55), 0 0 70px rgba(34,211,238,.18); animation: nucleus-pulse 1.8s ease-in-out infinite; }
+@keyframes nucleus-pulse { 0%,100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.08); filter: brightness(1.15); } }
+.orbit { position: absolute; left: 50%; top: 50%; border: 1px solid rgba(103,232,249,.16); border-radius: 50%; transform-style: preserve-3d; box-shadow: inset 0 0 18px rgba(34,211,238,.03); }
+.orbit-a { width: 180px; height: 62px; margin: -31px 0 0 -90px; transform: rotateZ(-18deg) rotateX(68deg); animation: orbit-spin 2.8s linear infinite; }
+.orbit-b { width: 180px; height: 62px; margin: -31px 0 0 -90px; transform: rotateZ(58deg) rotateX(68deg); animation: orbit-spin 3.6s linear infinite reverse; }
+.orbit-c { width: 180px; height: 62px; margin: -31px 0 0 -90px; transform: rotateZ(122deg) rotateX(68deg); animation: orbit-spin 2.2s linear infinite; }
+.orbit-d { width: 124px; height: 124px; margin: -62px 0 0 -62px; border-color: rgba(94,234,212,.12); animation: orbit-spin-flat 5.5s linear infinite; }
+@keyframes orbit-spin { from { transform: var(--rot, rotateZ(0deg) rotateX(68deg)) rotateZ(0deg); } to { transform: var(--rot, rotateZ(0deg) rotateX(68deg)) rotateZ(360deg); } }
+.orbit-a { --rot: rotateZ(-18deg) rotateX(68deg); } .orbit-b { --rot: rotateZ(58deg) rotateX(68deg); } .orbit-c { --rot: rotateZ(122deg) rotateX(68deg); }
+@keyframes orbit-spin-flat { from { transform: rotateX(72deg) rotateZ(0deg); } to { transform: rotateX(72deg) rotateZ(-360deg); } }
+.electron { position: absolute; top: 50%; left: 0; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 999px; background: radial-gradient(circle at 30% 30%, #fff, #67e8f9 45%, #06b6d4); box-shadow: 0 0 10px rgba(103,232,249,.95), 0 0 24px rgba(34,211,238,.45); }
+.electron-trail::after { content: ""; position: absolute; right: 6px; top: 2px; width: 26px; height: 3px; border-radius: 999px; background: linear-gradient(90deg, rgba(103,232,249,0), rgba(103,232,249,.55)); filter: blur(.5px); }
+.splash-brand { text-align: center; transform: translateZ(26px); }
+.splash-mark { font-size: 30px; font-weight: 700; letter-spacing: .22em; text-indent: .22em; color: #effaff; text-shadow: 0 0 24px rgba(34,211,238,.18); }
+.splash-tag { margin-top: 6px; font-size: 12px; letter-spacing: .06em; color: rgba(220,239,255,.72); }
+.splash-loader { width: 180px; height: 2px; margin: 16px auto 0; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+.splash-loader span { display: block; width: 42%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgba(34,211,238,0), #22d3ee, rgba(94,234,212,0)); box-shadow: 0 0 14px rgba(34,211,238,.45); animation: splash-load 1.15s ease-in-out infinite; }
+@keyframes splash-load { 0% { transform: translateX(-120%); } 100% { transform: translateX(340%); } }
+.splash-hint { margin-top: 10px; font-size: 11px; color: rgba(220,239,255,.38); }
+@media (prefers-reduced-motion: reduce) { .splash, .splash-stage, .nucleus span, .orbit, .splash-loader span { animation: none !important; transition: none !important; } .splash-in { opacity: 1; } }
+.panel-content { display: flex; flex-direction: column; }
+.resize-handle-y { flex: 0 0 auto; }
+.panel-view { flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; }

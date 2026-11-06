@@ -8,8 +8,10 @@ import TerminalPanel from "./components/TerminalPanel";
 import GitPanel from "./components/GitPanel";
 import LspPanel from "./components/LspPanel";
 import ExtensionsAiPanel from "./components/ExtensionsAiPanel";
+import Splash from "./components/Splash";
 import { DebugIcon, ExplorerIcon, ExtensionsIcon, GitIcon, OrbitMark, RefreshIcon, SaveIcon, SearchIcon, SettingsIcon } from "./components/Icons";
 import { orbit, workspaceApi, type RecentWorkspace } from "./services/orbit";
+import { checkForUpdate, getUpdaterConfig, setUpdaterConfig } from "./services/updater";
 import { useWorkspace } from "./store/workspace";
 
 type Activity = "explorer" | "search" | "git" | "extensions" | "debug" | "settings";
@@ -24,11 +26,18 @@ const activities: { id: Activity; label: string; icon: (p: { width?: number; hei
 ];
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [activity, setActivity] = useState<Activity>("explorer");
   const [panel, setPanel] = useState<PanelTab>("terminal");
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelH, setPanelH] = useState(240);
+  const [dragY, setDragY] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<RecentWorkspace[]>([]);
+  const [updateStatus, setUpdateStatus] = useState<string>("");
+  const [autoUpdate, setAutoUpdate] = useState(false);
   const ws = useWorkspace();
+  useEffect(() => { getUpdaterConfig().then((c) => { setAutoUpdate(c.autoCheck); if (c.autoCheck) void checkForUpdate({ auto: true }).then((r) => { if (r.status === "available") setUpdateStatus(`Update ${r.version} available`); }); }).catch(() => {}); }, []);
   const restoredRef = useRef(false);
   const saveTimer = useRef<number | null>(null);
   const active = useMemo(() => ws.files.find((f) => f.path === ws.activePath) ?? null, [ws.files, ws.activePath]);
@@ -108,6 +117,8 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [active, ws.root]);
 
+  if (showSplash) return <Splash onDone={() => setShowSplash(false)} />;
+
   return (
     <div className="orbit-app">
       <header className="header">
@@ -135,12 +146,12 @@ export default function App() {
              activity === "git" ? <div style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{ws.git?.is_repo ? `Branch: ${ws.git.branch || "(detached)"}\nChanged: ${ws.git.changed.length}\n\n${ws.git.changed.slice(0, 30).map((c) => `${c.staged ? "S" : " "} ${c.status} ${c.path}`).join("\n") || "Working tree clean."}\n\nOpen the Git History panel below for stage, commit, diff, and history.` : "No Git repository detected in this workspace."}</div> :
              activity === "search" ? <div className="empty-state"><p>Workspace search is planned.</p><p style={{ fontSize: 12 }}>Use file open and Git status for now.</p></div> :
              activity === "extensions" ? <ExtensionsAiPanel mode="extensions" /> :
-             activity === "settings" ? <div style={{ height: "100%", overflow: "auto" }}><ExtensionsAiPanel mode="ai" /><div className="empty-state" style={{ paddingTop: 0 }}><div className="section-label">LANGUAGE INTELLIGENCE</div><p style={{ fontSize: 12, marginBottom: 10 }}>Optional LSP support is user-configured. ORBIT never downloads language servers automatically.</p><button className="btn" type="button" onClick={() => setPanel("problems")}>Open LSP Panel</button></div></div> :
+             activity === "settings" ? <div style={{ height: "100%", overflow: "auto" }}><ExtensionsAiPanel mode="ai" /><div className="empty-state" style={{ paddingTop: 0 }}><div className="section-label">LANGUAGE INTELLIGENCE</div><p style={{ fontSize: 12, marginBottom: 10 }}>Optional LSP support is user-configured. ORBIT never downloads language servers automatically.</p><button className="btn" type="button" onClick={() => setPanel("problems")}>Open LSP Panel</button><div className="section-label">UPDATES</div><p style={{ fontSize: 12, marginBottom: 8 }}>Auto-update is opt-in. It uses Tauri's signed updater and only works after release endpoints/keys are configured. Update checks never run silently unless enabled.</p><label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12, marginBottom: 8 }}><input type="checkbox" checked={autoUpdate} onChange={async (e) => { const v = e.target.checked; setAutoUpdate(v); await setUpdaterConfig({ autoCheck: v, lastCheckedAt: Date.now() }); }} /> Check for updates on startup</label><div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><button className="btn" type="button" onClick={async () => { setUpdateStatus("Checking..."); const r = await checkForUpdate(); setUpdateStatus(r.status === "up_to_date" ? "ORBIT IDE is up to date." : r.status === "not_configured" ? "Updater not configured for this build/release." : r.status === "available" ? `Update ${"version" in r ? r.version : ""} available.` : r.status === "installing" ? "Installing update..." : "message" in r && r.message ? r.message : r.status); }}>{updateStatus === "Checking..." ? "Checking..." : "Check for Updates"}</button>{updateStatus ? <span style={{ fontSize: 11, color: "var(--text-faint)" }}>{updateStatus}</span> : null}</div></div></div> :
              <div className="empty-state"><p>{activities.find((a) => a.id === activity)?.label} is planned for a later milestone.</p></div>}
             {error ? <div style={{ marginTop: 10, color: "var(--danger)", whiteSpace: "pre-wrap", fontSize: 12 }}>{error}</div> : null}
           </div>
         </aside>
-        <section className="workbench">
+        <section className="workbench" style={{ gridTemplateRows: panelOpen ? `minmax(0,1fr) ${panelH}px` : "minmax(0,1fr) 34px" }}>
           <div className="editor-area">
             <div className="tabs" role="tablist" aria-label="Open editors">
               {ws.files.length ? ws.files.map((f) => {
@@ -165,14 +176,21 @@ export default function App() {
               )}
             </div>
           </div>
-          <div className="bottom">
-            <div className="panel-tabs" role="tablist" aria-label="Panel tabs">
-              {(["terminal", "problems", "output", "debug", "git-history"] as PanelTab[]).map((t) => <button key={t} type="button" className={`panel-tab ${panel === t ? "active" : ""}`} onClick={() => setPanel(t)}>{{ terminal: "Terminal", problems: "Problems", output: "Output", debug: "Debug Console", "git-history": "Git History" }[t]}</button>)}
+          <div className={`bottom ${panelOpen ? "" : "collapsed"}`} style={panelOpen ? { height: panelH } : undefined}>
+            <div className="panel-tabs" role="tablist" aria-label="Panel tabs" onDoubleClick={() => setPanelOpen((v) => !v)}>
+              {(["terminal", "problems", "output", "debug", "git-history"] as PanelTab[]).map((t) => <button key={t} type="button" className={`panel-tab ${panel === t ? "active" : ""}`} onClick={() => { setPanel(t); setPanelOpen(true); }}>{{ terminal: "Terminal", problems: "Problems", output: "Output", debug: "Debug Console", "git-history": "Git History" }[t]}</button>)}
+              <div className="panel-toolbar-actions">
+                <button type="button" className="icon-btn" title={panelOpen ? "Collapse panel" : "Expand panel"} onClick={() => setPanelOpen((v) => !v)}>{panelOpen ? "▾" : "▴"}</button>
+                <button type="button" className="icon-btn" title={panelH > 420 ? "Restore panel size" : "Maximize panel"} onClick={() => { setPanelOpen(true); setPanelH((h) => h > 420 ? 240 : Math.min(760, Math.floor(window.innerHeight * 0.62))); }}>{panelH > 420 ? "❐" : "□"}</button>
+              </div>
             </div>
-            {panel === "terminal" ? <div style={{ minHeight: 0, height: "100%" }}><TerminalPanel cwd={ws.root} /></div>
-             : panel === "git-history" ? <div style={{ minHeight: 0, height: "100%" }}><GitPanel root={ws.root} onChanged={() => { void refreshGit(); void refreshExplorer(); }} /></div>
-             : panel === "problems" ? <div style={{ minHeight: 0, height: "100%" }}><LspPanel /></div>
-             : <div className="panel-body">{panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") : "Debug console is planned for a later milestone."}</div>}
+            <div className="panel-content">
+              {panelOpen ? <div className={`resize-handle-y ${dragY != null ? "active" : ""}`} title="Drag to resize panel" onMouseDown={(e) => { e.preventDefault(); const startY = e.clientY; const startH = panelH; setDragY(startY); const move = (ev: MouseEvent) => setPanelH(Math.max(140, Math.min(Math.floor(window.innerHeight * 0.78), startH + (startY - ev.clientY)))); const up = () => { setDragY(null); window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); }; window.addEventListener("mousemove", move); window.addEventListener("mouseup", up); }} /> : null}
+              {panel === "terminal" ? <div className="panel-view"><TerminalPanel cwd={ws.root} expanded={panelH > 420} /></div>
+               : panel === "git-history" ? <div className="panel-view"><GitPanel root={ws.root} onChanged={() => { void refreshGit(); void refreshExplorer(); }} /></div>
+               : panel === "problems" ? <div className="panel-view"><LspPanel /></div>
+               : <div className="panel-body panel-view">{panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") : "Debug console is planned for a later milestone."}</div>}
+            </div>
           </div>
         </section>
       </div>

@@ -15,6 +15,8 @@ pub fn run() {
         .manage(ai::AiStreamState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             filesystem::fs_read_file,
             filesystem::fs_write_file,
