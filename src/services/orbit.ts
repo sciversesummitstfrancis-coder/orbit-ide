@@ -33,3 +33,12 @@ export const orbit = {
   onLspExit: (cb: (p: { server_id?: string }) => void): Promise<UnlistenFn> => listen("lsp://exit", (e) => cb(e.payload as any)),
   onLspStderr: (cb: (p: { server_id: string; line: string }) => void): Promise<UnlistenFn> => listen("lsp://stderr", (e) => cb(e.payload as any)),
 };
+export type RecentWorkspace = { path: string; name: string; opened_at: number };
+export type SessionState = { root?: string | null; active_path?: string | null; open_files: string[] };
+
+export const workspaceApi = {
+  addRecent: (path: string) => invoke<void>("workspace_add_recent", { path }),
+  listRecent: () => invoke<RecentWorkspace[]>("workspace_list_recent"),
+  saveSession: (session: SessionState) => invoke<void>("session_save", { session }),
+  restoreSession: () => invoke<SessionState>("session_restore"),
+};

@@ -1,9 +1,15 @@
 mod services;
-use services::{filesystem, git, lsp, settings, terminal};
+use services::{db, filesystem, git, lsp, settings, terminal, workspace};
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            let db = db::init(app.handle())?;
+            app.manage(db);
+            Ok(())
+        })
         .manage(terminal::TerminalState::default())
         .manage(lsp::LspState::default())
         .plugin(tauri_plugin_opener::init())
@@ -28,6 +34,10 @@ pub fn run() {
             lsp::lsp_start,
             lsp::lsp_send,
             lsp::lsp_stop,
+            workspace::workspace_add_recent,
+            workspace::workspace_list_recent,
+            workspace::session_save,
+            workspace::session_restore,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ORBIT IDE");

@@ -1,3 +1,4 @@
+pub mod db;
 pub mod filesystem;
 pub mod git;
 pub mod lsp;
