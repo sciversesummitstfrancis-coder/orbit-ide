@@ -14,16 +14,23 @@ pub async fn workspace_add_recent(state: State<'_, DbState>, path: String) -> Re
     let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e| e.to_string())?.as_secs() as i64;
     let conn = state.0.lock().map_err(|_| "db lock")?;
     conn.execute("INSERT INTO recent_workspaces(path,name,opened_at) VALUES(?1,?2,?3) ON CONFLICT(path) DO UPDATE SET name=excluded.name, opened_at=excluded.opened_at", params![path, name, now]).map_err(|e| e.to_string())?;
-    conn.execute("DELETE FROM recent_workspaces WHERE path NOT IN (SELECT path FROM recent_workspaces ORDER BY opened_at DESC LIMIT 20)", []).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM recent_workspaces WHERE path NOT IN (SELECT path FROM recent_workspaces ORDER BY opened_at DESC LIMIT 30)", []).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 pub async fn workspace_list_recent(state: State<'_, DbState>) -> Result<Vec<RecentWorkspace>, String> {
     let conn = state.0.lock().map_err(|_| "db lock")?;
-    let mut stmt = conn.prepare("SELECT path,name,opened_at FROM recent_workspaces ORDER BY opened_at DESC LIMIT 20").map_err(|e| e.to_string())?;
+    let mut stmt = conn.prepare("SELECT path,name,opened_at FROM recent_workspaces ORDER BY opened_at DESC LIMIT 30").map_err(|e| e.to_string())?;
     let rows = stmt.query_map([], |row| Ok(RecentWorkspace { path: row.get(0)?, name: row.get(1)?, opened_at: row.get(2)? })).map_err(|e| e.to_string())?;
     Ok(rows.flatten().collect())
+}
+
+#[tauri::command]
+pub async fn workspace_remove_recent(state: State<'_, DbState>, path: String) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|_| "db lock")?;
+    conn.execute("DELETE FROM recent_workspaces WHERE path=?1", params![path]).map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[tauri::command]

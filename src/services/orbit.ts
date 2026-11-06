@@ -3,7 +3,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
 export type DirEntry = { name: string; path: string; is_dir: boolean; is_file: boolean; is_hidden: boolean; size?: number | null; ext?: string | null };
 export type GitChange = { path: string; status: string; staged: boolean };
-export type GitStatus = { is_repo: boolean; branch?: string | null; changed: GitChange[] };
+export type GitStatus = { is_repo: boolean; branch?: string | null; upstream?: string | null; ahead?: number; behind?: number; changed: GitChange[]; branches?: string[]; stashes?: string[] };
 export type TermInfo = { id: string };
 export type LspServerConfig = { id: string; language: string; command: string; args: string[]; enabled: boolean };
 export type RecentWorkspace = { path: string; name: string; opened_at: number };
@@ -42,6 +42,7 @@ export const orbit = {
 export const workspaceApi = {
   addRecent: (path: string) => invoke<void>("workspace_add_recent", { path }),
   listRecent: () => invoke<RecentWorkspace[]>("workspace_list_recent"),
+  removeRecent: (path: string) => invoke<void>("workspace_remove_recent", { path }),
   saveSession: (session: SessionState) => invoke<void>("session_save", { session }),
   restoreSession: () => invoke<SessionState>("session_restore"),
 };
