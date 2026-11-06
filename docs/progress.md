@@ -1,39 +1,26 @@
 # ORBIT IDE Progress
 
-## Milestone 1 — Environment + architecture (complete)
-- Host: Fedora 44 x86_64 (GNOME/Wayland); Rust 1.99.1/Cargo 1.99.1; Node 22.14.0/npm 10.9.2; Git 2.56.0.
-- Project: `/home/shonshyjo/orbit-ide`, Tauri 2 + React + TypeScript + Vite.
-- Identity: `ORBIT IDE` (`dev.orbit.ide`), “Your code. Your environment. Your orbit.”
-- Docs: `README.md`, `docs/architecture.md`, `docs/progress.md`.
-- Rust service modules: `filesystem`, `git`, `settings`, `terminal`, `workspace` (partial/scaffold where noted).
+## Milestone 1–4 (complete)
+- Host: Fedora 44 x86_64 (GNOME/Wayland); Rust 1.99.1; Node 22.14.0; Git 2.56.0.
+- Project: `/home/shonshyjo/orbit-ide`, Tauri 2 + React + TypeScript + Vite. Identity `ORBIT IDE` (`dev.orbit.ide`).
+- Orbit shell/design system, explorer (Open Folder + lazy tree + file open), Monaco editor with Orbit theme, dirty tabs, `Ctrl/Cmd+S` save via Rust `fs_write_file`.
 
-## Milestone 2 — Shell + design system (complete)
-- Orbit tokens/shell: deep charcoal + electric cyan/teal, restrained transitions.
-- UI: header, activity bar, sidebar, editor area, bottom panel (Terminal/Problems/Output/Debug Console/Git History), status bar.
+## Milestone 5 — Integrated PTY terminal (baseline complete)
+- Rust: `portable-pty` PTY sessions, default shell, workspace cwd, `terminal_create/write/resize/kill/list`, `terminal://data`/`terminal://exit`.
+- Frontend: xterm.js + fit addon, multi-session tabs, create/kill, resize, Orbit theme.
 
-## Milestone 3 — Filesystem + explorer (baseline complete)
-- Tauri dialog plugin/capability for folder open.
-- Rust commands: `fs_read_file/write/list_dir/create/rename/delete`, `git_status`, `git_run`, settings stubs.
-- Frontend: `src/services/orbit.ts`, Zustand workspace store, lazy `Explorer` tree, Open Folder flow, file-open tabs, Git branch/status indicators.
-
-## Milestone 4 — Monaco editor + save workflow (baseline complete)
-- `@monaco-editor/react` with Orbit dark theme, syntax mapping by extension, dirty tab marker, `Ctrl/Cmd+S` and Save to Rust `fs_write_file`.
-- **Not yet:** split groups, full recovery/crash restore, advanced find/replace polish, full encoding/indent controls, LSP-connected Monaco services.
-
-## Milestone 5 — Integrated terminal (baseline implemented)
-- Rust PTY backend: `portable-pty` + `uuid`, `TerminalState`, commands `terminal_create/write/resize/kill/list`, `terminal://data` and `terminal://exit` events, default shell via `$SHELL`/`COMSPEC`, `TERM=xterm-256color`, workspace cwd passed on create.
-- Frontend: `@xterm/xterm` + `@xterm/addon-fit` in `src/components/TerminalPanel.tsx`, multi-session tabs, create/kill, resize observer, input/output over Tauri invoke/events, Orbit terminal theme.
-- **Not yet fully verified interactively:** PTY input/output in a live `tauri dev` GUI session (I verified compile/build; run app and confirm shell prompt/commands).
-- **Not yet:** shell profile picker (Bash/Zsh/Fish/PowerShell), process metadata in status UI, robust session persistence, Windows/macOS runtime validation.
+## Milestone 6 — Git integration UI (baseline implemented)
+- Rust: `git_status` (branch + staged/unstaged changes) and generic `git_run` over installed Git CLI.
+- Frontend: `GitPanel` in bottom panel (`Git History` tab) — status/refresh, fetch, pull (`--ff-only`), push, stage/unstage selected files, stage all, diff per file, commit (requires staged files + message), history (`git log --oneline -n 20 --decorate`), output console. Source Control sidebar shows branch/changes summary.
+- Uses installed Git executable/credentials; push/pull behavior depends on remote/auth configuration.
+- **Not yet:** visual diff viewer/editor gutter, branch create/switch UI, merge/conflict UI, commit amend/stash, credential helper UX.
 
 ## Verification (latest)
-- `cargo check` (`src-tauri`): pass.
-- `npm run typecheck`: pass.
-- `npm run build`: pass (bundle-size warning from Monaco/xterm; optimization pending).
-- `npx tauri build --debug --no-bundle`: pass; binary `src-tauri/target/debug/orbit-ide`.
+- `cargo check`: pass.
+- `npm run typecheck` + `npm run build`: pass (bundle-size warning only).
+- `npx tauri build --debug --no-bundle`: pass → `src-tauri/target/debug/orbit-ide`.
 
 ## Next
-- M6: Git stage/unstage/commit/diff/history/branch/pull/push UI over CLI.
-- M7: optional configurable LSP (no silent downloads).
+- M7: optional configurable LSP (no silent downloads) — server registry/config, stdio JSON-RPC bridge, diagnostics/hover/definition plumbing.
 - M8: SQLite workspace/settings persistence, recents, session restore/recovery.
 - M9/M10: permissioned extensions + optional local AI; CI packaging/checksums; cross-platform test artifacts.

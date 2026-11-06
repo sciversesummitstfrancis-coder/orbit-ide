@@ -6,6 +6,7 @@ import Explorer from "./components/Explorer";
 import OrbitEditor from "./components/Editor";
 import TerminalPanel from "./components/TerminalPanel";
 import GitPanel from "./components/GitPanel";
+import LspPanel from "./components/LspPanel";
 import { orbit } from "./services/orbit";
 import { useWorkspace } from "./store/workspace";
 
@@ -95,6 +96,7 @@ export default function App() {
             {activity === "explorer" ? <Explorer onOpenFolder={openFolder} /> :
              activity === "git" ? <div style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{ws.git?.is_repo ? `Branch: ${ws.git.branch || "(detached)"}\nChanged: ${ws.git.changed.length}\n\n${ws.git.changed.slice(0, 30).map((c) => `${c.staged ? "S" : " "} ${c.status} ${c.path}`).join("\n") || "Working tree clean."}\n\nOpen the Git History/changes panel below for stage, commit, diff, and history.` : "No Git repository detected in this workspace."}</div> :
              activity === "search" ? <div className="empty-state"><p>Workspace search is planned for Milestone 8.</p><p style={{ fontSize: 12 }}>Use file open and Git status for now.</p></div> :
+             activity === "settings" ? <div className="empty-state"><div className="section-label">LANGUAGE INTELLIGENCE</div><p style={{ fontSize: 12, marginBottom: 10 }}>Optional LSP support is user-configured. ORBIT never downloads language servers automatically.</p><button className="btn" type="button" onClick={() => setPanel("problems")}>Open LSP Panel</button><div className="section-label">EDITOR</div><p style={{ fontSize: 12 }}>Theme, keybindings, and persistence are expanded in Milestone 8.</p></div> :
              <div className="empty-state"><p>{activities.find((a) => a.id === activity)?.label} is planned for a later milestone.</p></div>}
             {error ? <div style={{ marginTop: 10, color: "var(--danger)", whiteSpace: "pre-wrap", fontSize: 12 }}>{error}</div> : null}
           </div>
@@ -145,10 +147,11 @@ export default function App() {
               <div style={{ minHeight: 0, height: "100%" }}><TerminalPanel cwd={ws.root} /></div>
             ) : panel === "git-history" ? (
               <div style={{ minHeight: 0, height: "100%" }}><GitPanel root={ws.root} onChanged={() => { void refreshGit(); void refreshExplorer(); }} /></div>
+            ) : panel === "problems" ? (
+              <div style={{ minHeight: 0, height: "100%" }}><LspPanel /></div>
             ) : (
               <div className="panel-body">
                 {panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") :
-                 panel === "problems" ? "Diagnostics and LSP problems are planned for Milestone 7." :
                  "Debug console is planned for a later milestone."}
               </div>
             )}

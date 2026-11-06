@@ -8,6 +8,7 @@ export type DirEntry = {
 export type GitChange = { path: string; status: string; staged: boolean };
 export type GitStatus = { is_repo: boolean; branch?: string | null; changed: GitChange[] };
 export type TermInfo = { id: string };
+export type LspServerConfig = { id: string; language: string; command: string; args: string[]; enabled: boolean };
 
 export const orbit = {
   listDir: (path: string) => invoke<DirEntry[]>("fs_list_dir", { req: { path } }),
@@ -24,4 +25,11 @@ export const orbit = {
   termKill: (id: string) => invoke<void>("terminal_kill", { id }),
   onTermData: (cb: (p: { id: string; data: string }) => void): Promise<UnlistenFn> => listen("terminal://data", (e) => cb(e.payload as any)),
   onTermExit: (cb: (p: { id: string; code?: number | null }) => void): Promise<UnlistenFn> => listen("terminal://exit", (e) => cb(e.payload as any)),
+  lspList: () => invoke<LspServerConfig[]>("lsp_list"),
+  lspStart: (config: LspServerConfig) => invoke<string>("lsp_start", { config }),
+  lspSend: (server_id: string, message: unknown) => invoke<void>("lsp_send", { serverId: server_id, message }),
+  lspStop: (server_id: string) => invoke<void>("lsp_stop", { serverId: server_id }),
+  onLspMessage: (cb: (p: { server_id: string; message: unknown }) => void): Promise<UnlistenFn> => listen("lsp://message", (e) => cb(e.payload as any)),
+  onLspExit: (cb: (p: { server_id?: string }) => void): Promise<UnlistenFn> => listen("lsp://exit", (e) => cb(e.payload as any)),
+  onLspStderr: (cb: (p: { server_id: string; line: string }) => void): Promise<UnlistenFn> => listen("lsp://stderr", (e) => cb(e.payload as any)),
 };

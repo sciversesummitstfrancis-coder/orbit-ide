@@ -1,10 +1,11 @@
 mod services;
-use services::{filesystem, git, settings, terminal};
+use services::{filesystem, git, lsp, settings, terminal};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .manage(terminal::TerminalState::default())
+        .manage(lsp::LspState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
@@ -23,6 +24,10 @@ pub fn run() {
             terminal::terminal_resize,
             terminal::terminal_kill,
             terminal::terminal_list,
+            lsp::lsp_list,
+            lsp::lsp_start,
+            lsp::lsp_send,
+            lsp::lsp_stop,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ORBIT IDE");
