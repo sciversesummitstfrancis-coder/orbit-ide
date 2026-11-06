@@ -81,14 +81,14 @@ export default function ReceiptsPanel() {
           )) : <div className="panel-body">No receipts yet. Save a file, run a git action, open/close a terminal, or run local AI to build a local timeline.</div>}
         </div>
         <div style={{ overflow: "auto", padding: 10 }}>
-          {selected ? <>
+          {selected ? <div>
             <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
               <button className="btn primary" type="button" onClick={() => void replay(selected)}>Open / Replay</button>
               <button className="btn" type="button" onClick={() => void copy(selected)}>Copy</button>
             </div>
             <div style={{ fontSize: 11, color: "var(--text-faint)", marginBottom: 8 }}>{selected.category}/{selected.action} · {new Date(selected.ts).toLocaleString()} · {selected.status}{selected.workspace ? ` · ${selected.workspace}` : ""}</div>
             <pre className="panel-body" style={{ margin: 0, whiteSpace: "pre-wrap" }}>{JSON.stringify(selected, null, 2)}</pre>
-          </ : <div className="panel-body">Select a receipt to inspect details. “Open / Replay” opens file paths, re-runs git commands with confirmation in the current workspace, or copies details.</div>}
+          </div> : <div className="panel-body">Select a receipt to inspect details. “Open / Replay” opens file paths, re-runs git commands with confirmation in the current workspace, or copies details.</div>}
         </div>
       </div>
     </div>

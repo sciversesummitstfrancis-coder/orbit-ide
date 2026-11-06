@@ -1,5 +1,5 @@
 mod services;
-use services::{ai, capsules, db, extensions, filesystem, git, lsp, receipts, settings, terminal, timemachine, workspace};
+use services::{ai, atlas, capsules, db, extensions, filesystem, git, hud, lsp, mission, receipts, replay, settings, terminal, timemachine, trust, workspace};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -65,6 +65,12 @@ pub fn run() {
             capsules::capsule_list,
             capsules::capsule_get,
             capsules::capsule_delete,
+            mission::mission_timeline,
+            trust::trust_scan,
+            atlas::atlas_index,
+            atlas::atlas_impact,
+            replay::replay_plan,
+            hud::hud_metrics,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ORBIT IDE");

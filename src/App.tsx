@@ -11,6 +11,12 @@ import ExtensionsAiPanel from "./components/ExtensionsAiPanel";
 import ReceiptsPanel from "./components/ReceiptsPanel";
 import TimeMachinePanel from "./components/TimeMachinePanel";
 import CapsulesPanel from "./components/CapsulesPanel";
+import MissionPanel from "./components/MissionPanel";
+import TrustPanel from "./components/TrustPanel";
+import AtlasPanel from "./components/AtlasPanel";
+import ReplayPanel from "./components/ReplayPanel";
+import HudPanel from "./components/HudPanel";
+
 import Splash from "./components/Splash";
 import { DebugIcon, ExplorerIcon, ExtensionsIcon, GitIcon, OrbitMark, RefreshIcon, SaveIcon, SearchIcon, SettingsIcon } from "./components/Icons";
 import { orbit, workspaceApi, type RecentWorkspace } from "./services/orbit";
@@ -19,7 +25,7 @@ import { tmApi } from "./services/timemachine";
 import { useWorkspace } from "./store/workspace";
 
 type Activity = "explorer" | "search" | "git" | "extensions" | "debug" | "settings";
-type PanelTab = "terminal" | "problems" | "output" | "debug" | "git-history" | "receipts" | "timemachine" | "capsules";
+type PanelTab = "terminal" | "problems" | "output" | "debug" | "git-history" | "receipts" | "timemachine" | "capsules" | "mission" | "trust" | "atlas" | "replay" | "hud";
 const activities: { id: Activity; label: string; icon: (p: { width?: number; height?: number }) => ReactElement }[] = [
   { id: "explorer", label: "Explorer", icon: ExplorerIcon },
   { id: "search", label: "Search", icon: SearchIcon },
@@ -222,7 +228,7 @@ export default function App() {
           </div>
           <div className={`bottom ${panelOpen ? "" : "collapsed"}`} style={panelOpen ? { height: panelH } : undefined}>
             <div className="panel-tabs" role="tablist" aria-label="Panel tabs" onDoubleClick={() => setPanelOpen((v) => !v)}>
-              {(["terminal", "problems", "output", "debug", "git-history", "receipts", "timemachine", "capsules"] as PanelTab[]).map((t) => <button key={t} type="button" className={`panel-tab ${panel === t ? "active" : ""}`} onClick={() => { setPanel(t); setPanelOpen(true); }}>{{ terminal: "Terminal", problems: "Problems", output: "Output", debug: "Debug Console", "git-history": "Git History", receipts: "Receipts", timemachine: "Time Machine", capsules: "Capsules" }[t]}</button>)}
+              {(["terminal", "problems", "output", "debug", "git-history", "receipts", "timemachine", "capsules", "mission", "trust", "atlas", "replay", "hud"] as PanelTab[]).map((t) => <button key={t} type="button" className={`panel-tab ${panel === t ? "active" : ""}`} onClick={() => { setPanel(t); setPanelOpen(true); }}>{{ terminal: "Terminal", problems: "Problems", output: "Output", debug: "Debug Console", "git-history": "Git History", receipts: "Receipts", timemachine: "Time Machine", capsules: "Capsules", mission: "Mission", trust: "Trust", atlas: "Atlas", replay: "Replay", hud: "HUD" }[t]}</button>)}
               <div className="panel-toolbar-actions">
                 <button type="button" className="icon-btn" title={panelOpen ? "Collapse panel" : "Expand panel"} onClick={() => setPanelOpen((v) => !v)}>{panelOpen ? "▾" : "▴"}</button>
                 <button type="button" className="icon-btn" title={panelH > 420 ? "Restore panel size" : "Maximize panel"} onClick={() => { setPanelOpen(true); setPanelH((h) => h > 420 ? 240 : Math.min(760, Math.floor(window.innerHeight * 0.62))); }}>{panelH > 420 ? "❐" : "□"}</button>
@@ -236,6 +242,11 @@ export default function App() {
                : panel === "receipts" ? <div className="panel-view"><ReceiptsPanel /></div>
                : panel === "timemachine" ? <div className="panel-view"><TimeMachinePanel /></div>
                : panel === "capsules" ? <div className="panel-view"><CapsulesPanel /></div>
+               : panel === "mission" ? <div className="panel-view"><MissionPanel /></div>
+               : panel === "trust" ? <div className="panel-view"><TrustPanel /></div>
+               : panel === "atlas" ? <div className="panel-view"><AtlasPanel /></div>
+               : panel === "replay" ? <div className="panel-view"><ReplayPanel /></div>
+               : panel === "hud" ? <div className="panel-view"><HudPanel /></div>
                : <div className="panel-body panel-view">{panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") : "Debug console is planned for a later milestone."}</div>}
             </div>
           </div>

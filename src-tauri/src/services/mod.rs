@@ -10,3 +10,8 @@ pub mod settings;
 pub mod terminal;
 pub mod timemachine;
 pub mod workspace;
+pub mod atlas;
+pub mod hud;
+pub mod mission;
+pub mod replay;
+pub mod trust;

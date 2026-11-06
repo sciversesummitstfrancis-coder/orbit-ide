@@ -51,3 +51,11 @@ ORBIT IDE has functional local baselines for Milestones 1–10 on Fedora/Linux (
 - **Time Machine:** local SQLite `snapshots` for save/before-save/draft history; periodic dirty draft capture (desktop) and startup draft recovery prompt; panel preview/restore-to-editor (unsaved)/copy/delete.
 - **Task Capsules:** local SQLite `capsules` store named task context (workspace, open files metadata, active file, selection, lightweight git summary, note); panel capture/inspect/restore/copy/delete.
 - Privacy/safety: local-only, no cloud. Capsules do not store unsaved edits or secrets; Time Machine stores local snapshot content for recovery/history. See `docs/time-machine-capsules.md`.
+
+## Mission Control / Trust Radar / Atlas / Replay / HUD (differentiator baselines)
+- **Mission Control:** local timeline + error incident detection from receipts/snapshots; read-only.
+- **Trust Radar:** bounded local heuristic scan (active/common config files, recent receipts) for secret-like/destructive/auth-risk signals; on-demand, no cloud.
+- **Offline Codebase Atlas:** bounded heuristic file/symbol/import index + impact-radius query; opens files in editor; no embeddings/cloud.
+- **Task Replay Sandbox:** capsule-to-checklist replay plan; file opens are read operations, git/commands require explicit confirmation.
+- **Energy/Latency HUD:** local metrics from receipt durations and recent local AI runs; no telemetry.
+- See `docs/differentiators.md`.
