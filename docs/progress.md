@@ -46,3 +46,8 @@ ORBIT IDE has functional local baselines for Milestones 1–10 on Fedora/Linux (
 - Local SQLite `receipts` table records file save, git command, terminal create/kill, and local AI task metadata (no cloud, capped ~2000 rows).
 - Bottom panel **Receipts** tab provides category/search/workspace filters, detail inspection, copy, open-file, and confirm-before-replay for git commands.
 - Privacy/safety: no keystrokes, PTY output, full file contents, prompts, or model responses stored by default. See `docs/command-receipts.md`.
+
+## Workspace Time Machine & Task Capsules (new differentiator baselines)
+- **Time Machine:** local SQLite `snapshots` for save/before-save/draft history; periodic dirty draft capture (desktop) and startup draft recovery prompt; panel preview/restore-to-editor (unsaved)/copy/delete.
+- **Task Capsules:** local SQLite `capsules` store named task context (workspace, open files metadata, active file, selection, lightweight git summary, note); panel capture/inspect/restore/copy/delete.
+- Privacy/safety: local-only, no cloud. Capsules do not store unsaved edits or secrets; Time Machine stores local snapshot content for recovery/history. See `docs/time-machine-capsules.md`.

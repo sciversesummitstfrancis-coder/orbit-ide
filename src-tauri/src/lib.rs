@@ -1,5 +1,5 @@
 mod services;
-use services::{ai, db, extensions, filesystem, git, lsp, receipts, settings, terminal, workspace};
+use services::{ai, capsules, db, extensions, filesystem, git, lsp, receipts, settings, terminal, timemachine, workspace};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -56,6 +56,15 @@ pub fn run() {
             receipts::receipts_list,
             receipts::receipts_clear,
             receipts::receipts_summary,
+            timemachine::tm_list,
+            timemachine::tm_get,
+            timemachine::tm_capture,
+            timemachine::tm_latest_dirty,
+            timemachine::tm_delete,
+            capsules::capsule_save,
+            capsules::capsule_list,
+            capsules::capsule_get,
+            capsules::capsule_delete,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ORBIT IDE");

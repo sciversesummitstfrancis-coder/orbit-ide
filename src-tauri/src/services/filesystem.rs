@@ -30,8 +30,11 @@ pub async fn fs_write_file(state: State<'_, DbState>, req: WriteFileReq) -> Resu
     if let Some(parent) = PathBuf::from(&req.path).parent() { fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
     let bytes = req.content.len();
     let path = req.path.clone();
-    let res = fs::write(&req.path, req.content).map_err(|e| format!("write_file {}: {e}", req.path));
+    // Snapshot previous disk content if present (before overwrite) and new content after success.
+    if let Ok(prev) = fs::read_to_string(&path) { crate::services::timemachine::try_record_snapshot(&state, &path, None, "before-save", &prev); }
+    let res = fs::write(&req.path, req.content.clone()).map_err(|e| format!("write_file {}: {e}", req.path));
     let (status, err) = match &res { Ok(_) => ("ok", None), Err(e) => ("error", Some(e.clone())) };
+    if res.is_ok() { crate::services::timemachine::try_record_snapshot(&state, &path, None, "save", &req.content); }
     let mut detail = json!({"path": path, "bytes": bytes});
     if let Some(e) = err { detail["error"] = json!(e); }
     crate::services::receipts::try_record(&state, "file", "save", &format!("Saved {}", PathBuf::from(&detail["path"].as_str().unwrap_or("")).file_name().and_then(|s| s.to_str()).unwrap_or("file")), Some(&detail), status, detail["path"].as_str(), None);

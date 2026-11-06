@@ -9,14 +9,17 @@ import GitPanel from "./components/GitPanel";
 import LspPanel from "./components/LspPanel";
 import ExtensionsAiPanel from "./components/ExtensionsAiPanel";
 import ReceiptsPanel from "./components/ReceiptsPanel";
+import TimeMachinePanel from "./components/TimeMachinePanel";
+import CapsulesPanel from "./components/CapsulesPanel";
 import Splash from "./components/Splash";
 import { DebugIcon, ExplorerIcon, ExtensionsIcon, GitIcon, OrbitMark, RefreshIcon, SaveIcon, SearchIcon, SettingsIcon } from "./components/Icons";
 import { orbit, workspaceApi, type RecentWorkspace } from "./services/orbit";
 import { checkForUpdate, getUpdaterConfig, setUpdaterConfig } from "./services/updater";
+import { tmApi } from "./services/timemachine";
 import { useWorkspace } from "./store/workspace";
 
 type Activity = "explorer" | "search" | "git" | "extensions" | "debug" | "settings";
-type PanelTab = "terminal" | "problems" | "output" | "debug" | "git-history" | "receipts";
+type PanelTab = "terminal" | "problems" | "output" | "debug" | "git-history" | "receipts" | "timemachine" | "capsules";
 const activities: { id: Activity; label: string; icon: (p: { width?: number; height?: number }) => ReactElement }[] = [
   { id: "explorer", label: "Explorer", icon: ExplorerIcon },
   { id: "search", label: "Search", icon: SearchIcon },
@@ -41,6 +44,8 @@ export default function App() {
   useEffect(() => { getUpdaterConfig().then((c) => { setAutoUpdate(c.autoCheck); if (c.autoCheck) void checkForUpdate({ auto: true }).then((r) => { if (r.status === "available") setUpdateStatus(`Update ${r.version} available`); }); }).catch(() => {}); }, []);
   const restoredRef = useRef(false);
   const saveTimer = useRef<number | null>(null);
+  const draftTimer = useRef<number | null>(null);
+  const recoveryChecked = useRef(false);
   const active = useMemo(() => ws.files.find((f) => f.path === ws.activePath) ?? null, [ws.files, ws.activePath]);
   const workspaceName = ws.root ? ws.root.split(/[/\\]/).filter(Boolean).pop() || ws.root : "No workspace";
   const dirty = !!active && active.content !== active.saved;
@@ -106,6 +111,44 @@ export default function App() {
       }
     })();
   }, []);
+
+
+  // Time Machine: periodic draft capture for dirty open files (local, capped server-side).
+  useEffect(() => {
+    if (!(window as any).__TAURI_INTERNALS__) return;
+    if (draftTimer.current) window.clearTimeout(draftTimer.current);
+    draftTimer.current = window.setTimeout(() => {
+      ws.files.filter((f) => f.content !== f.saved).forEach((f) => {
+        void tmApi.capture(f.path, f.content, { workspace: ws.root || undefined, kind: "draft" }).catch(() => {});
+      });
+    }, 8000);
+    return () => { if (draftTimer.current) window.clearTimeout(draftTimer.current); };
+  }, [ws.root, ws.files.map((f) => `${f.path}:${f.content.length}:${f.content === f.saved}`).join("|")]);
+
+  // Time Machine: on startup, offer to restore latest draft snapshots for this workspace.
+  useEffect(() => {
+    if (!(window as any).__TAURI_INTERNALS__ || !ws.root || recoveryChecked.current) return;
+    recoveryChecked.current = true;
+    (async () => {
+      try {
+        const drafts = await tmApi.latestDirty(ws.root);
+        if (!drafts.length) return;
+        const names = drafts.slice(0, 5).map((d) => d.path.split(/[/\\]/).filter(Boolean).pop() || d.path).join(", ");
+        if (!window.confirm(`ORBIT found ${drafts.length} local draft snapshot(s) for this workspace (${names}${drafts.length > 5 ? ", …" : ""}). Restore them into editor buffers as unsaved changes?`)) return;
+        for (const d of drafts) {
+          try {
+            const snap = await tmApi.get(d.id);
+            const content = await orbit.readFile(d.path).catch(() => "");
+            if (content === snap.content) continue; // already matches disk
+            const fname = d.path.split(/[/\\]/).filter(Boolean).pop() || d.path;
+            const existing = useWorkspace.getState().files.find((f) => f.path === d.path);
+            if (existing) useWorkspace.getState().updateContent(d.path, snap.content);
+            else useWorkspace.getState().openFile({ path: d.path, name: fname, content: snap.content, saved: content });
+          } catch {}
+        }
+      } catch {}
+    })();
+  }, [ws.root]);
 
   useEffect(() => { queuePersist(); }, [ws.root, ws.activePath, ws.files.map((f) => `${f.path}:${f.content === f.saved}`).join("|")]);
 
@@ -179,7 +222,7 @@ export default function App() {
           </div>
           <div className={`bottom ${panelOpen ? "" : "collapsed"}`} style={panelOpen ? { height: panelH } : undefined}>
             <div className="panel-tabs" role="tablist" aria-label="Panel tabs" onDoubleClick={() => setPanelOpen((v) => !v)}>
-              {(["terminal", "problems", "output", "debug", "git-history", "receipts"] as PanelTab[]).map((t) => <button key={t} type="button" className={`panel-tab ${panel === t ? "active" : ""}`} onClick={() => { setPanel(t); setPanelOpen(true); }}>{{ terminal: "Terminal", problems: "Problems", output: "Output", debug: "Debug Console", "git-history": "Git History", receipts: "Receipts" }[t]}</button>)}
+              {(["terminal", "problems", "output", "debug", "git-history", "receipts", "timemachine", "capsules"] as PanelTab[]).map((t) => <button key={t} type="button" className={`panel-tab ${panel === t ? "active" : ""}`} onClick={() => { setPanel(t); setPanelOpen(true); }}>{{ terminal: "Terminal", problems: "Problems", output: "Output", debug: "Debug Console", "git-history": "Git History", receipts: "Receipts", timemachine: "Time Machine", capsules: "Capsules" }[t]}</button>)}
               <div className="panel-toolbar-actions">
                 <button type="button" className="icon-btn" title={panelOpen ? "Collapse panel" : "Expand panel"} onClick={() => setPanelOpen((v) => !v)}>{panelOpen ? "▾" : "▴"}</button>
                 <button type="button" className="icon-btn" title={panelH > 420 ? "Restore panel size" : "Maximize panel"} onClick={() => { setPanelOpen(true); setPanelH((h) => h > 420 ? 240 : Math.min(760, Math.floor(window.innerHeight * 0.62))); }}>{panelH > 420 ? "❐" : "□"}</button>
@@ -191,6 +234,8 @@ export default function App() {
                : panel === "git-history" ? <div className="panel-view"><GitPanel root={ws.root} onChanged={() => { void refreshGit(); void refreshExplorer(); }} /></div>
                : panel === "problems" ? <div className="panel-view"><LspPanel /></div>
                : panel === "receipts" ? <div className="panel-view"><ReceiptsPanel /></div>
+               : panel === "timemachine" ? <div className="panel-view"><TimeMachinePanel /></div>
+               : panel === "capsules" ? <div className="panel-view"><CapsulesPanel /></div>
                : <div className="panel-body panel-view">{panel === "output" ? (error ? `Last error:\n${error}` : "Output channel ready.") : "Debug console is planned for a later milestone."}</div>}
             </div>
           </div>

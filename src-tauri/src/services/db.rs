@@ -17,7 +17,12 @@ pub fn init(app: &AppHandle) -> Result<DbState, String> {
          CREATE TABLE IF NOT EXISTS session_state (id INTEGER PRIMARY KEY CHECK (id = 1), root TEXT, active_path TEXT, open_files TEXT NOT NULL DEFAULT '[]');
          CREATE TABLE IF NOT EXISTS receipts (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, category TEXT NOT NULL, action TEXT NOT NULL, summary TEXT NOT NULL, detail TEXT, status TEXT NOT NULL, workspace TEXT, duration_ms INTEGER);
          CREATE INDEX IF NOT EXISTS idx_receipts_ts ON receipts(ts DESC);
-         CREATE INDEX IF NOT EXISTS idx_receipts_cat ON receipts(category, ts DESC);",
+         CREATE INDEX IF NOT EXISTS idx_receipts_cat ON receipts(category, ts DESC);
+         CREATE TABLE IF NOT EXISTS snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, path TEXT NOT NULL, workspace TEXT, kind TEXT NOT NULL, bytes INTEGER NOT NULL, content TEXT NOT NULL);
+         CREATE INDEX IF NOT EXISTS idx_snapshots_path ON snapshots(path, ts DESC);
+         CREATE INDEX IF NOT EXISTS idx_snapshots_ws ON snapshots(workspace, ts DESC);
+         CREATE TABLE IF NOT EXISTS capsules (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, workspace TEXT, data TEXT NOT NULL);
+         CREATE INDEX IF NOT EXISTS idx_capsules_ws ON capsules(workspace, updated_at DESC);",
     ).map_err(|e| format!("sqlite init: {e}"))?;
     conn.execute("INSERT OR IGNORE INTO session_state (id, open_files) VALUES (1, '[]')", []).map_err(|e| e.to_string())?;
     Ok(DbState(Mutex::new(conn)))

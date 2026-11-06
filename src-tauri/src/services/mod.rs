@@ -1,4 +1,5 @@
 pub mod ai;
+pub mod capsules;
 pub mod db;
 pub mod extensions;
 pub mod filesystem;
@@ -7,4 +8,5 @@ pub mod lsp;
 pub mod receipts;
 pub mod settings;
 pub mod terminal;
+pub mod timemachine;
 pub mod workspace;
