@@ -61,3 +61,8 @@
 - Added `scripts/checksums.sh`, `docs/installation.md`, `docs/testing.md`; updated `README.md` and `package.json` scripts.
 - `npm run check`: pass. `cargo test`: pass (0 tests currently — test coverage is still needed). Checksum script smoke-tested on `dist/`.
 - **Honest status:** no platform installers/DMG/RPM/DEB/AppImage artifacts were produced and tested on all target OSes in this session. Do not claim release artifacts are functional until built and smoke-tested on each target platform/architecture.
+
+## Local AI direction (practical, ORBIT-appropriate)
+- **Not implemented:** training a foundation model from scratch (impractical/costly for this project) and no claim of being "better than online agents overall".
+- **Implemented baseline:** optional, disabled-by-default, **local-endpoint-only** assistant (`127.0.0.1`/`localhost`/`[::1]`) with SQLite-persisted config, Ollama-compatible `/api/generate` + `/api/tags` model discovery, and grounded tasks (explain code/error, suggest refactor, draft commit, generate docs, custom) using user-chosen local context (active file excerpt, Git summary, pasted error text). Output is advisory; no cloud/paid API path is enabled by default.
+- **Next valuable steps:** Monaco selection capture, diff/diagnostic context wiring, streaming responses, explicit "apply suggestion" review flow, benchmark/eval prompts for modest hardware, and optional local runtime detection (Ollama) without auto-download.
