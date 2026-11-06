@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { orbit, type DirEntry } from "../services/orbit";
 import { useWorkspace } from "../store/workspace";
+import { ChevronIcon, FileIcon, FolderIcon } from "./Icons";
 
-function icon(e: DirEntry) {
-  if (e.is_dir) return { t: "▸", cls: "dir" };
-  const ext = e.ext || "";
-  if (["ts", "tsx"].includes(ext)) return { t: "TS", cls: "ts" };
-  if (["js", "jsx", "mjs", "cjs"].includes(ext)) return { t: "JS", cls: "ts" };
-  if (ext === "rs") return { t: "RS", cls: "rs" };
-  if (ext === "json") return { t: "{}", cls: "json" };
-  if (["md", "mdx"].includes(ext)) return { t: "MD", cls: "md" };
-  if (["css", "scss"].includes(ext)) return { t: "#", cls: "json" };
-  if (["html", "xml", "svg"].includes(ext)) return { t: "<>", cls: "md" };
-  return { t: "·", cls: "" };
+function extBadge(e: DirEntry) {
+  const ext = (e.ext || "").toUpperCase();
+  if (["TS", "TSX", "JS", "JSX", "MJS", "CJS"].includes(ext)) return { t: ext.slice(0, 2), cls: "ts" };
+  if (ext === "RS") return { t: "RS", cls: "rs" };
+  if (ext === "JSON") return { t: "{}", cls: "json" };
+  if (["MD", "MDX"].includes(ext)) return { t: "MD", cls: "md" };
+  if (["CSS", "SCSS"].includes(ext)) return { t: "#", cls: "json" };
+  if (["HTML", "XML", "SVG"].includes(ext)) return { t: "<>", cls: "md" };
+  if (["PY"].includes(ext)) return { t: "PY", cls: "ts" };
+  return null;
 }
 
 function Node({ entry, depth, onOpen }: { entry: DirEntry; depth: number; onOpen: (p: string, n: string) => void }) {
@@ -27,14 +27,16 @@ function Node({ entry, depth, onOpen }: { entry: DirEntry; depth: number; onOpen
       catch (e) { setErr(String(e)); }
     }
   };
-  const i = icon(entry);
+  const badge = !entry.is_dir ? extBadge(entry) : null;
   return (
     <div>
-      <button type="button" className="tree-row" style={{ paddingLeft: 8 + depth * 12 }} onClick={toggle} title={entry.path}>
-        <span className={`tree-glyph ${i.cls}`}>{entry.is_dir ? (open ? "▾" : "▸") : i.t}</span>
+      <button type="button" className="tree-row" style={{ paddingLeft: 6 + depth * 12 }} onClick={toggle} title={entry.path}>
+        <span className="tree-chevron">{entry.is_dir ? <ChevronIcon open={open} width={14} height={14} /> : <span style={{ width: 14, display: "inline-block" }} />}</span>
+        <span className={`tree-icon ${entry.is_dir ? "dir" : ""}`}>{entry.is_dir ? <FolderIcon width={15} height={15} /> : <FileIcon width={15} height={15} />}</span>
         <span className="tree-name">{entry.name}</span>
+        {badge ? <span className={`tree-badge ${badge.cls}`}>{badge.t}</span> : null}
       </button>
-      {err ? <div style={{ paddingLeft: 28 + depth * 12, color: "var(--danger)", fontSize: 11 }}>{err}</div> : null}
+      {err ? <div style={{ paddingLeft: 34 + depth * 12, color: "var(--danger)", fontSize: 11 }}>{err}</div> : null}
       {open && kids?.map((k) => <Node key={k.path} entry={k} depth={depth + 1} onOpen={onOpen} />)}
     </div>
   );

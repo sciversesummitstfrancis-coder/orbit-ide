@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import "./styles/tokens.css";
 import "./styles/app.css";
@@ -7,18 +7,19 @@ import OrbitEditor from "./components/Editor";
 import TerminalPanel from "./components/TerminalPanel";
 import GitPanel from "./components/GitPanel";
 import LspPanel from "./components/LspPanel";
+import { DebugIcon, ExplorerIcon, ExtensionsIcon, GitIcon, OrbitMark, RefreshIcon, SaveIcon, SearchIcon, SettingsIcon } from "./components/Icons";
 import { orbit } from "./services/orbit";
 import { useWorkspace } from "./store/workspace";
 
 type Activity = "explorer" | "search" | "git" | "extensions" | "debug" | "settings";
 type PanelTab = "terminal" | "problems" | "output" | "debug" | "git-history";
-const activities: { id: Activity; label: string; glyph: string }[] = [
-  { id: "explorer", label: "Explorer", glyph: "▤" },
-  { id: "search", label: "Search", glyph: "⌕" },
-  { id: "git", label: "Source Control", glyph: "⎇" },
-  { id: "extensions", label: "Extensions", glyph: "▣" },
-  { id: "debug", label: "Debug", glyph: "◌" },
-  { id: "settings", label: "Settings", glyph: "⚙" },
+const activities: { id: Activity; label: string; icon: (p: { width?: number; height?: number }) => ReactElement }[] = [
+  { id: "explorer", label: "Explorer", icon: ExplorerIcon },
+  { id: "search", label: "Search", icon: SearchIcon },
+  { id: "git", label: "Source Control", icon: GitIcon },
+  { id: "extensions", label: "Extensions", icon: ExtensionsIcon },
+  { id: "debug", label: "Debug", icon: DebugIcon },
+  { id: "settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export default function App() {
@@ -68,33 +69,36 @@ export default function App() {
     <div className="orbit-app">
       <header className="header">
         <div className="brand" aria-label="ORBIT IDE">
-          <span className="brand-mark" />
+          <span className="brand-mark" aria-hidden="true"><OrbitMark size={18} /></span>
           <span className="brand-name">ORBIT</span>
           <span className="brand-sub" title={ws.root || undefined}>{workspaceName}</span>
         </div>
         <button className="command" type="button" aria-label="Command search">
           <span>Search commands and files…</span><span className="command-kbd">Ctrl+P</span>
         </button>
-        <button className="icon-btn" type="button" title="Open Folder (Ctrl+O)" onClick={() => void openFolder()}>▤</button>
-        <button className="icon-btn" type="button" title="Save (Ctrl+S)" onClick={() => void saveActive()} disabled={!dirty}>●</button>
-        <button className="icon-btn" type="button" title="Settings" onClick={() => setActivity("settings")}>⚙</button>
+        <button className="icon-btn" type="button" title="Open Folder (Ctrl+O)" onClick={() => void openFolder()}><ExplorerIcon width={16} height={16} /></button>
+        <button className="icon-btn" type="button" title="Save (Ctrl+S)" onClick={() => void saveActive()} disabled={!dirty}><SaveIcon width={16} height={16} /></button>
+        <button className="icon-btn" type="button" title="Settings" onClick={() => setActivity("settings")}><SettingsIcon width={16} height={16} /></button>
       </header>
 
       <div className="main">
         <nav className="activity" aria-label="Activity bar">
-          {activities.map((a) => (
-            <button key={a.id} type="button" className={`icon-btn ${activity === a.id ? "active" : ""}`} title={a.label} aria-label={a.label} aria-pressed={activity === a.id} onClick={() => setActivity(a.id)}>{a.glyph}</button>
-          ))}
+          {activities.map((a) => {
+            const Icon = a.icon;
+            return (
+              <button key={a.id} type="button" className={`icon-btn ${activity === a.id ? "active" : ""}`} title={a.label} aria-label={a.label} aria-pressed={activity === a.id} onClick={() => setActivity(a.id)}><Icon width={20} height={20} /></button>
+            );
+          })}
         </nav>
 
         <aside className="sidebar">
           <div className="sidebar-header">
             <span>{activities.find((a) => a.id === activity)?.label.toUpperCase()}</span>
-            {activity === "explorer" && ws.root ? <button className="icon-btn" type="button" title="Refresh explorer and Git" onClick={() => void refreshExplorer()}>↻</button> : null}
+            {activity === "explorer" && ws.root ? <button className="icon-btn" type="button" title="Refresh explorer and Git" onClick={() => void refreshExplorer()}><RefreshIcon width={15} height={15} /></button> : null}
           </div>
           <div className="sidebar-body">
             {activity === "explorer" ? <Explorer onOpenFolder={openFolder} /> :
-             activity === "git" ? <div style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{ws.git?.is_repo ? `Branch: ${ws.git.branch || "(detached)"}\nChanged: ${ws.git.changed.length}\n\n${ws.git.changed.slice(0, 30).map((c) => `${c.staged ? "S" : " "} ${c.status} ${c.path}`).join("\n") || "Working tree clean."}\n\nOpen the Git History/changes panel below for stage, commit, diff, and history.` : "No Git repository detected in this workspace."}</div> :
+             activity === "git" ? <div style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{ws.git?.is_repo ? `Branch: ${ws.git.branch || "(detached)"}\nChanged: ${ws.git.changed.length}\n\n${ws.git.changed.slice(0, 30).map((c) => `${c.staged ? "S" : " "} ${c.status} ${c.path}`).join("\n") || "Working tree clean."}\n\nOpen the Git History panel below for stage, commit, diff, and history.` : "No Git repository detected in this workspace."}</div> :
              activity === "search" ? <div className="empty-state"><p>Workspace search is planned for Milestone 8.</p><p style={{ fontSize: 12 }}>Use file open and Git status for now.</p></div> :
              activity === "settings" ? <div className="empty-state"><div className="section-label">LANGUAGE INTELLIGENCE</div><p style={{ fontSize: 12, marginBottom: 10 }}>Optional LSP support is user-configured. ORBIT never downloads language servers automatically.</p><button className="btn" type="button" onClick={() => setPanel("problems")}>Open LSP Panel</button><div className="section-label">EDITOR</div><p style={{ fontSize: 12 }}>Theme, keybindings, and persistence are expanded in Milestone 8.</p></div> :
              <div className="empty-state"><p>{activities.find((a) => a.id === activity)?.label} is planned for a later milestone.</p></div>}
@@ -122,7 +126,7 @@ export default function App() {
               ) : (
                 <div className="welcome">
                   <div className="welcome-card">
-                    <div className="welcome-orbit" aria-hidden="true" />
+                    <div className="welcome-orbit" aria-hidden="true"><OrbitMark size={40} /></div>
                     <h1>ORBIT IDE</h1>
                     <p className="tagline">Your code. Your environment. Your orbit.</p>
                     <p>Open a local folder, browse files, edit in Monaco, and save through native Rust services.</p>
@@ -161,7 +165,7 @@ export default function App() {
 
       <footer className="status">
         <div className="left">
-          <span className="status-item pill">⎇ {ws.git?.is_repo ? (ws.git.branch || "detached") : "no git"}</span>
+          <span className="status-item pill"><GitIcon width={13} height={13} /> {ws.git?.is_repo ? (ws.git.branch || "detached") : "no git"}</span>
           <span className="status-item" title={ws.root || ""}>{workspaceName}</span>
           {dirty ? <span className="status-item pill warn">Unsaved</span> : null}
         </div>

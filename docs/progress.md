@@ -24,3 +24,13 @@
 - M7: optional configurable LSP (no silent downloads) — server registry/config, stdio JSON-RPC bridge, diagnostics/hover/definition plumbing.
 - M8: SQLite workspace/settings persistence, recents, session restore/recovery.
 - M9/M10: permissioned extensions + optional local AI; CI packaging/checksums; cross-platform test artifacts.
+
+## Milestone 7 — Optional configurable LSP framework (baseline implemented)
+- Rust: `services/lsp.rs` with `LspState`, `lsp_list/start/send/stop`, stdio JSON-RPC framing (`Content-Length`), stdout → `lsp://message`, stderr → `lsp://stderr`, exit → `lsp://exit`. **No silent downloads**; start fails with a manual-install/configure message when command is unavailable/disabled.
+- Frontend: `LspPanel` (Problems panel) exposes manual server config templates (TypeScript, Rust, Python, JSON), command/args editing, explicit Start/Stop, and live event log.
+- Monaco is not yet fully wired to LSP protocol features (diagnostics/hover/definition/symbols) — this milestone provides the safe, configurable transport/control foundation.
+
+## Next
+- M8: SQLite workspace/settings persistence (rusqlite bundled), recent projects, session restore/recovery, settings integration including LSP configs.
+- M9: permissioned extension architecture + optional local AI (Ollama/local endpoint) — never mandatory.
+- M10: CI (GitHub Actions native runners), cross-platform packaging, checksums/docs, automated tests and artifact verification.
