@@ -1,14 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
-export type DirEntry = {
-  name: string; path: string; is_dir: boolean; is_file: boolean;
-  is_hidden: boolean; size?: number | null; ext?: string | null;
-};
+export type DirEntry = { name: string; path: string; is_dir: boolean; is_file: boolean; is_hidden: boolean; size?: number | null; ext?: string | null };
 export type GitChange = { path: string; status: string; staged: boolean };
 export type GitStatus = { is_repo: boolean; branch?: string | null; changed: GitChange[] };
 export type TermInfo = { id: string };
 export type LspServerConfig = { id: string; language: string; command: string; args: string[]; enabled: boolean };
+export type RecentWorkspace = { path: string; name: string; opened_at: number };
+export type SessionState = { root?: string | null; active_path?: string | null; open_files: string[] };
+export type ExtensionManifest = { id: string; name: string; version: string; description: string; permissions: string[]; contributes: unknown };
+export type ExtensionInfo = { manifest: ExtensionManifest; path: string; enabled: boolean; trusted: boolean };
+export type AiConfig = { enabled: boolean; provider: string; endpoint: string; model: string };
+export type AiTask = "explain_code" | "explain_error" | "suggest_refactor" | "draft_commit" | "generate_docs" | "custom";
+export type AiContext = { task?: AiTask; prompt?: string; active_path?: string | null; active_content?: string | null; selection?: string | null; git_summary?: string | null; error_text?: string | null };
 
 export const orbit = {
   listDir: (path: string) => invoke<DirEntry[]>("fs_list_dir", { req: { path } }),
@@ -33,8 +37,6 @@ export const orbit = {
   onLspExit: (cb: (p: { server_id?: string }) => void): Promise<UnlistenFn> => listen("lsp://exit", (e) => cb(e.payload as any)),
   onLspStderr: (cb: (p: { server_id: string; line: string }) => void): Promise<UnlistenFn> => listen("lsp://stderr", (e) => cb(e.payload as any)),
 };
-export type RecentWorkspace = { path: string; name: string; opened_at: number };
-export type SessionState = { root?: string | null; active_path?: string | null; open_files: string[] };
 
 export const workspaceApi = {
   addRecent: (path: string) => invoke<void>("workspace_add_recent", { path }),
@@ -43,15 +45,13 @@ export const workspaceApi = {
   restoreSession: () => invoke<SessionState>("session_restore"),
 };
 
-export type ExtensionManifest = { id: string; name: string; version: string; description: string; permissions: string[]; contributes: unknown };
-export type ExtensionInfo = { manifest: ExtensionManifest; path: string; enabled: boolean; trusted: boolean };
-export type AiConfig = { enabled: boolean; provider: string; endpoint: string; model: string };
-
 export const m9Api = {
   extensionsList: () => invoke<ExtensionInfo[]>("extensions_list"),
   extensionsSetEnabled: (id: string, enabled: boolean) => invoke<void>("extensions_set_enabled", { id, enabled }),
   extensionsScaffold: () => invoke<any>("extensions_scaffold"),
   aiGetConfig: () => invoke<AiConfig>("ai_get_config"),
   aiSetConfig: (config: AiConfig) => invoke<void>("ai_set_config", { config }),
+  aiListModels: () => invoke<string[]>("ai_list_models"),
   aiComplete: (prompt: string) => invoke<any>("ai_complete", { prompt }),
+  aiRunTask: (ctx: AiContext) => invoke<any>("ai_run_task", { ctx }),
 };

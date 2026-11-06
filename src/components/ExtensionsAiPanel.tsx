@@ -1,23 +1,20 @@
 import { useEffect, useState } from "react";
-import { m9Api, type AiConfig, type ExtensionInfo } from "../services/orbit";
+import { m9Api, type ExtensionInfo } from "../services/orbit";
+import AiAssistantPanel from "./AiAssistantPanel";
 
 export default function ExtensionsAiPanel({ mode }: { mode: "extensions" | "ai" }) {
   const [exts, setExts] = useState<ExtensionInfo[]>([]);
   const [scaffold, setScaffold] = useState<any>(null);
-  const [ai, setAi] = useState<AiConfig>({ enabled: false, provider: "ollama", endpoint: "http://127.0.0.1:11434", model: "" });
-  const [prompt, setPrompt] = useState("Explain the selected code or error in plain terms.");
-  const [out, setOut] = useState("");
-  const [busy, setBusy] = useState(false);
 
   async function load() {
-    if (mode === "extensions") {
-      setExts(await m9Api.extensionsList().catch(() => []));
-      setScaffold(await m9Api.extensionsScaffold().catch(() => null));
-    } else setAi(await m9Api.aiGetConfig().catch(() => ai));
+    setExts(await m9Api.extensionsList().catch(() => []));
+    setScaffold(await m9Api.extensionsScaffold().catch(() => null));
   }
-  useEffect(() => { void load(); }, [mode]);
+  useEffect(() => { if (mode === "extensions") void load(); }, [mode]);
 
-  if (mode === "extensions") return (
+  if (mode === "ai") return <AiAssistantPanel />;
+
+  return (
     <div className="empty-state" style={{ padding: 12, overflow: "auto", height: "100%" }}>
       <div className="section-label">EXTENSIONS (PERMISSIONED SCAFFOLD)</div>
       <p style={{ fontSize: 12 }}>ORBIT reads manifests from app data <code>extensions/*/orbit-extension.json</code>. Untrusted extensions do not get unrestricted filesystem/process access. Execution sandbox is planned.</p>
@@ -31,23 +28,6 @@ export default function ExtensionsAiPanel({ mode }: { mode: "extensions" | "ai" 
         </div>
       )) : <p style={{ fontSize: 12, color: "var(--text-faint)" }}>No extension manifests found.</p>}
       {scaffold ? <pre className="panel-body" style={{ marginTop: 10, whiteSpace: "pre-wrap" }}>{JSON.stringify(scaffold, null, 2)}</pre> : null}
-    </div>
-  );
-
-  return (
-    <div className="empty-state" style={{ padding: 12, overflow: "auto", height: "100%" }}>
-      <div className="section-label">OPTIONAL LOCAL AI</div>
-      <p style={{ fontSize: 12 }}>Disabled by default. Uses a local endpoint only (localhost/127.0.0.1). No paid or cloud API is required.</p>
-      <label style={{ display: "flex", gap: 8, alignItems: "center", margin: "10px 0", fontSize: 12 }}><input type="checkbox" checked={ai.enabled} onChange={(e) => setAi({ ...ai, enabled: e.target.checked })} /> Enable local AI</label>
-      <div style={{ display: "grid", gap: 8, maxWidth: 520 }}>
-        <input value={ai.endpoint} onChange={(e) => setAi({ ...ai, endpoint: e.target.value })} placeholder="http://127.0.0.1:11434" style={{ background: "var(--bg-2)", border: "1px solid var(--border-subtle)", borderRadius: 8, padding: "8px 10px" }} />
-        <input value={ai.model} onChange={(e) => setAi({ ...ai, model: e.target.value })} placeholder="model (e.g. qwen2.5-coder, llama3.2)" style={{ background: "var(--bg-2)", border: "1px solid var(--border-subtle)", borderRadius: 8, padding: "8px 10px" }} />
-        <button className="btn" type="button" disabled={busy} onClick={async () => { setBusy(true); try { await m9Api.aiSetConfig(ai); setOut("Saved local AI config."); } catch (e) { setOut(String(e)); } finally { setBusy(false); } }}>Save Config</button>
-      </div>
-      <div className="section-label">TEST PROMPT</div>
-      <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} style={{ width: "100%", maxWidth: 720, background: "var(--bg-2)", border: "1px solid var(--border-subtle)", borderRadius: 8, padding: 10 }} />
-      <div style={{ marginTop: 8 }}><button className="btn primary" type="button" disabled={busy || !ai.enabled} onClick={async () => { setBusy(true); try { const r = await m9Api.aiComplete(prompt); setOut(r?.response || JSON.stringify(r, null, 2)); } catch (e) { setOut(String(e)); } finally { setBusy(false); } }}>Run Local AI</button></div>
-      {out ? <pre className="panel-body" style={{ marginTop: 10, whiteSpace: "pre-wrap" }}>{out}</pre> : null}
     </div>
   );
 }

@@ -43,7 +43,9 @@ pub fn run() {
             extensions::extensions_scaffold,
             ai::ai_get_config,
             ai::ai_set_config,
+            ai::ai_list_models,
             ai::ai_complete,
+            ai::ai_run_task,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ORBIT IDE");

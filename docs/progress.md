@@ -54,3 +54,10 @@
 ## Milestone 10 — Packaging/CI/testing (planned baseline next)
 - Add GitHub Actions native-runner workflows for check/build/package, checksums, release artifacts, and install docs.
 - Do not claim platform artifacts are functional without platform builds/tests.
+
+## Milestone 10 — CI/packaging/tests/docs (baseline added)
+- Added `.github/workflows/ci.yml` (frontend typecheck/build; Ubuntu Rust check + test with Tauri deps).
+- Added `.github/workflows/release.yml` (native-runner matrix via `tauri-apps/tauri-action`, draft release; Windows x64, Ubuntu 24.04, macOS ARM64/Intel targets configured). Workflow requires GitHub Actions environment to run; **not executed/verified in this session**.
+- Added `scripts/checksums.sh`, `docs/installation.md`, `docs/testing.md`; updated `README.md` and `package.json` scripts.
+- `npm run check`: pass. `cargo test`: pass (0 tests currently — test coverage is still needed). Checksum script smoke-tested on `dist/`.
+- **Honest status:** no platform installers/DMG/RPM/DEB/AppImage artifacts were produced and tested on all target OSes in this session. Do not claim release artifacts are functional until built and smoke-tested on each target platform/architecture.
