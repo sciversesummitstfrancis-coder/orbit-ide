@@ -7,6 +7,7 @@ import OrbitEditor from "./components/Editor";
 import TerminalPanel from "./components/TerminalPanel";
 import GitPanel from "./components/GitPanel";
 import LspPanel from "./components/LspPanel";
+import ExtensionsAiPanel from "./components/ExtensionsAiPanel";
 import { DebugIcon, ExplorerIcon, ExtensionsIcon, GitIcon, OrbitMark, RefreshIcon, SaveIcon, SearchIcon, SettingsIcon } from "./components/Icons";
 import { orbit, workspaceApi, type RecentWorkspace } from "./services/orbit";
 import { useWorkspace } from "./store/workspace";
@@ -133,7 +134,8 @@ export default function App() {
             {activity === "explorer" ? <Explorer onOpenFolder={openFolder} /> :
              activity === "git" ? <div style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{ws.git?.is_repo ? `Branch: ${ws.git.branch || "(detached)"}\nChanged: ${ws.git.changed.length}\n\n${ws.git.changed.slice(0, 30).map((c) => `${c.staged ? "S" : " "} ${c.status} ${c.path}`).join("\n") || "Working tree clean."}\n\nOpen the Git History panel below for stage, commit, diff, and history.` : "No Git repository detected in this workspace."}</div> :
              activity === "search" ? <div className="empty-state"><p>Workspace search is planned.</p><p style={{ fontSize: 12 }}>Use file open and Git status for now.</p></div> :
-             activity === "settings" ? <div className="empty-state"><div className="section-label">LANGUAGE INTELLIGENCE</div><p style={{ fontSize: 12, marginBottom: 10 }}>Optional LSP support is user-configured. ORBIT never downloads language servers automatically.</p><button className="btn" type="button" onClick={() => setPanel("problems")}>Open LSP Panel</button><div className="section-label">PERSISTENCE</div><p style={{ fontSize: 12 }}>SQLite stores local settings, recent workspaces, and session restore state in the app data directory.</p></div> :
+             activity === "extensions" ? <ExtensionsAiPanel mode="extensions" /> :
+             activity === "settings" ? <div style={{ height: "100%", overflow: "auto" }}><ExtensionsAiPanel mode="ai" /><div className="empty-state" style={{ paddingTop: 0 }}><div className="section-label">LANGUAGE INTELLIGENCE</div><p style={{ fontSize: 12, marginBottom: 10 }}>Optional LSP support is user-configured. ORBIT never downloads language servers automatically.</p><button className="btn" type="button" onClick={() => setPanel("problems")}>Open LSP Panel</button></div></div> :
              <div className="empty-state"><p>{activities.find((a) => a.id === activity)?.label} is planned for a later milestone.</p></div>}
             {error ? <div style={{ marginTop: 10, color: "var(--danger)", whiteSpace: "pre-wrap", fontSize: 12 }}>{error}</div> : null}
           </div>

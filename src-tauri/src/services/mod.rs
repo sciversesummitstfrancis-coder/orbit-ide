@@ -1,4 +1,6 @@
+pub mod ai;
 pub mod db;
+pub mod extensions;
 pub mod filesystem;
 pub mod git;
 pub mod lsp;

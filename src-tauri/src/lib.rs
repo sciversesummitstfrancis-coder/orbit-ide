@@ -1,5 +1,5 @@
 mod services;
-use services::{db, filesystem, git, lsp, settings, terminal, workspace};
+use services::{ai, db, extensions, filesystem, git, lsp, settings, terminal, workspace};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -38,6 +38,12 @@ pub fn run() {
             workspace::workspace_list_recent,
             workspace::session_save,
             workspace::session_restore,
+            extensions::extensions_list,
+            extensions::extensions_set_enabled,
+            extensions::extensions_scaffold,
+            ai::ai_get_config,
+            ai::ai_set_config,
+            ai::ai_complete,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ORBIT IDE");

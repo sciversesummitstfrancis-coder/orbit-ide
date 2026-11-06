@@ -42,3 +42,16 @@ export const workspaceApi = {
   saveSession: (session: SessionState) => invoke<void>("session_save", { session }),
   restoreSession: () => invoke<SessionState>("session_restore"),
 };
+
+export type ExtensionManifest = { id: string; name: string; version: string; description: string; permissions: string[]; contributes: unknown };
+export type ExtensionInfo = { manifest: ExtensionManifest; path: string; enabled: boolean; trusted: boolean };
+export type AiConfig = { enabled: boolean; provider: string; endpoint: string; model: string };
+
+export const m9Api = {
+  extensionsList: () => invoke<ExtensionInfo[]>("extensions_list"),
+  extensionsSetEnabled: (id: string, enabled: boolean) => invoke<void>("extensions_set_enabled", { id, enabled }),
+  extensionsScaffold: () => invoke<any>("extensions_scaffold"),
+  aiGetConfig: () => invoke<AiConfig>("ai_get_config"),
+  aiSetConfig: (config: AiConfig) => invoke<void>("ai_set_config", { config }),
+  aiComplete: (prompt: string) => invoke<any>("ai_complete", { prompt }),
+};

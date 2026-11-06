@@ -34,3 +34,14 @@
 - M8: SQLite workspace/settings persistence (rusqlite bundled), recent projects, session restore/recovery, settings integration including LSP configs.
 - M9: permissioned extension architecture + optional local AI (Ollama/local endpoint) — never mandatory.
 - M10: CI (GitHub Actions native runners), cross-platform packaging, checksums/docs, automated tests and artifact verification.
+
+## Milestone 8 — SQLite persistence (baseline implemented)
+- Rust: `rusqlite` (bundled) DB in Tauri app data dir (`orbit.db`, WAL). Tables: `settings`, `recent_workspaces`, `session_state`.
+- Commands: `settings_get/set` (persisted JSON values), `workspace_add_recent/list_recent`, `session_save/restore`.
+- Frontend: recent workspaces on welcome screen, "Open Recent", session restore on startup (desktop/Tauri only), debounced session persistence for root/active/open files, recent list updated on open.
+- **Not yet:** robust dirty-file content recovery across crashes, settings UI editor, recents removal/pinning, full multi-root workspace metadata.
+
+## Verification (latest)
+- `cargo check`: pass.
+- `npm run typecheck` + `npm run build`: pass (bundle-size warning only).
+- `npx tauri build --debug --no-bundle`: pass → `src-tauri/target/debug/orbit-ide`.
