@@ -1,6 +1,6 @@
 [package]
 name = "orbit-ide"
-version = "0.1.0"
+version = "0.1.1"
 description = "ORBIT IDE — Your code. Your environment. Your orbit."
 authors = ["ORBIT Contributors"]
 edition = "2021"

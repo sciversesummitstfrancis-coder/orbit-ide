@@ -180,7 +180,7 @@
 
   <section class="hero">
     <div>
-      <div class="pill"><span class="dot"></span> v0.1.0 — latest release</div>
+      <div class="pill"><span class="dot"></span> v0.1.1 — latest release</div>
       <h1>Your code.<br>Your environment.<br><span class="grad">Your orbit.</span></h1>
       <p class="tagline">
         ORBIT IDE is a next-generation coding environment — a native, Rust-powered
@@ -193,19 +193,19 @@
           <span id="dlPrimaryText">Download for …</span>
         </a>
         <div class="dl-row">
-          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.0/ORBIT.IDE_0.1.0_x64-setup.exe">
+          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.1/ORBIT.IDE_0.1.1_x64-setup.exe">
             <span>🪟 Windows</span><small>.exe</small>
           </a>
-          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.0/ORBIT.IDE_0.1.0_x64_en-US.msi">
+          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.1/ORBIT.IDE_0.1.1_x64_en-US.msi">
             <span>🪟 Windows</span><small>.msi</small>
           </a>
-          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.0/ORBIT.IDE_0.1.0_amd64.deb">
+          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.1/ORBIT.IDE_0.1.1_amd64.deb">
             <span>🧭 Ubuntu/Debian</span><small>.deb</small>
           </a>
-          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.0/ORBIT.IDE-0.1.0-1.x86_64.rpm">
+          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.1/ORBIT.IDE-0.1.1-1.x86_64.rpm">
             <span>🎩 Fedora/RHEL</span><small>.rpm</small>
           </a>
-          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.0/ORBIT.IDE_0.1.0_amd64.AppImage" style="grid-column: 1 / -1;">
+          <a class="dl" href="https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.1/ORBIT.IDE_0.1.1_amd64.AppImage" style="grid-column: 1 / -1;">
             <span>🌌 Any Linux</span><small>AppImage</small>
           </a>
         </div>
@@ -224,7 +224,7 @@
 
   <section class="release" id="whats-new">
     <div class="release-inner">
-      <div class="pill"><span class="dot"></span> What's new in v0.1.0</div>
+      <div class="pill"><span class="dot"></span> What's new in v0.1.1</div>
       <div class="cards">
         <div class="card"><div class="icon">🎬</div><h3>Cinematic boot sequence</h3><p>A refined multi-stage splash takes you from launch to workspace — calm, fast, premium.</p></div>
         <div class="card"><div class="icon">⚙️</div><h3>Tauri 2 stability</h3><p>Faster shell spawn, tighter fs/dialog/opener plugins and a hardened window lifecycle.</p></div>
@@ -244,7 +244,7 @@
 
   <footer>
     <p><a href="https://github.com/sciversesummitstfrancis-coder/orbit-ide" target="_blank" rel="noopener">ORBIT IDE</a> is open — download, star, orbit on.</p>
-    <p style="margin-top:.5rem; opacity:.6">v0.1.0 · built with Tauri 2 + React</p>
+    <p style="margin-top:.5rem; opacity:.6">v0.1.1 · built with Tauri 2 + React</p>
   </footer>
 </main>
 
@@ -273,13 +273,13 @@
   })();
 
   // platform detection
-  const R = 'https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.0/';
+  const R = 'https://github.com/sciversesummitstfrancis-coder/orbit-ide/releases/download/app-v0.1.1/';
   const MAP = {
-    win:  { url: R + 'ORBIT.IDE_0.1.0_x64-setup.exe', label: 'Download for Windows' },
-    macr: { url: R + 'ORBIT.IDE_0.1.0_x64-setup.exe', label: 'Download for Windows' },
-    deb:  { url: R + 'ORBIT.IDE_0.1.0_amd64.deb',    label: 'Download for Ubuntu/Debian' },
-    rpm:  { url: R + 'ORBIT.IDE-0.1.0-1.x86_64.rpm', label: 'Download for Fedora/RHEL' },
-    other:{ url: R + 'ORBIT.IDE_0.1.0_amd64.AppImage', label: 'Download AppImage (Linux)' }
+    win:  { url: R + 'ORBIT.IDE_0.1.1_x64-setup.exe', label: 'Download for Windows' },
+    macr: { url: R + 'ORBIT.IDE_0.1.1_x64-setup.exe', label: 'Download for Windows' },
+    deb:  { url: R + 'ORBIT.IDE_0.1.1_amd64.deb',    label: 'Download for Ubuntu/Debian' },
+    rpm:  { url: R + 'ORBIT.IDE-0.1.1-1.x86_64.rpm', label: 'Download for Fedora/RHEL' },
+    other:{ url: R + 'ORBIT.IDE_0.1.1_amd64.AppImage', label: 'Download AppImage (Linux)' }
   };
   const ua = navigator.userAgent.toLowerCase();
   let key = 'other';
