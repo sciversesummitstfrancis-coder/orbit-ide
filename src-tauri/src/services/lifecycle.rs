@@ -44,7 +44,6 @@ fn hide_splash(app: &AppHandle) {
 }
 
 pub fn reveal_main(app: &AppHandle) -> Result<(), String> {
-    // ensure splash cannot linger
     hide_splash(app);
     let main = app.get_webview_window("main").ok_or_else(|| "main window not found".to_string())?;
     main.show().map_err(|e| e.to_string())?;
@@ -59,22 +58,29 @@ pub async fn splash_ready(app: AppHandle, state: State<'_, StartupState>) -> Res
         if s.splash_ready { return Ok(()); }
         s.splash_ready = true;
     }
-    // Real initialization milestones: Rust setup completed before this command is callable;
-    // services/plugins/SQLite are registered in setup(). Frontend is mounting in parallel.
-    emit_init(&app, "rust_ready", "Initializing environment", 22);
-    std::thread::sleep(Duration::from_millis(40));
-    emit_init(&app, "services", "Preparing workspace services", 48);
-    std::thread::sleep(Duration::from_millis(40));
-    emit_init(&app, "frontend", "Loading interface resources", 72);
-    // allow a brief window for main webview to boot; frontend_ready may advance this sooner
+    // Milestones reflect real startup phases (DB/services/plugins registered in setup;
+    // frontend mount signaled by frontend_ready) with timed pacing so the sequence is legible.
+    emit_init(&app, "system", "INITIALIZING SYSTEM", 12);
+    std::thread::sleep(Duration::from_millis(90));
+    emit_init(&app, "environment", "ESTABLISHING ENVIRONMENT", 28);
+    std::thread::sleep(Duration::from_millis(90));
+    emit_init(&app, "modules", "LOADING CORE MODULES", 46);
+    std::thread::sleep(Duration::from_millis(90));
+    emit_init(&app, "sync", "SYNCHRONIZING COMPONENTS", 64);
     let app2 = app.clone();
     std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(550));
-        let should_complete = app2.state::<StartupState>().0.lock().map(|s| !s.main_shown).unwrap_or(true);
-        if should_complete {
-            emit_init(&app2, "finalizing", "Almost ready", 92);
+        std::thread::sleep(Duration::from_millis(420));
+        let (frontend_ready, main_shown) = app2.state::<StartupState>().0.lock().map(|s| (s.frontend_ready, s.main_shown)).unwrap_or((false, false));
+        if main_shown { return; }
+        if frontend_ready {
+            emit_init(&app2, "workspace", "PREPARING WORKSPACE", 88);
             std::thread::sleep(Duration::from_millis(120));
-            emit_complete(&app2, "Ready");
+            emit_complete(&app2, "SYSTEM ONLINE");
+        } else {
+            emit_init(&app2, "workspace", "PREPARING WORKSPACE", 82);
+            std::thread::sleep(Duration::from_millis(900));
+            let main_shown = app2.state::<StartupState>().0.lock().map(|s| s.main_shown).unwrap_or(false);
+            if !main_shown { emit_complete(&app2, "SYSTEM ONLINE"); }
         }
     });
     Ok(())
@@ -87,8 +93,9 @@ pub async fn frontend_ready(app: AppHandle, state: State<'_, StartupState>) -> R
         if s.frontend_ready { false } else { s.frontend_ready = true; !s.main_shown }
     };
     if should_emit {
-        emit_init(&app, "frontend_ready", "Finalizing workspace", 94);
-        emit_complete(&app, "Ready");
+        emit_init(&app, "workspace", "PREPARING WORKSPACE", 90);
+        std::thread::sleep(Duration::from_millis(80));
+        emit_complete(&app, "SYSTEM ONLINE");
     }
     Ok(())
 }
