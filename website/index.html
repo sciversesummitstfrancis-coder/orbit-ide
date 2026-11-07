@@ -6,6 +6,16 @@
 <title>ORBIT IDE — Your code. Your environment. Your orbit.</title>
 <meta name="description" content="ORBIT IDE — a next-generation code environment. Free downloads for Windows, Ubuntu/Debian and Fedora. .exe, .deb, .rpm, AppImage.">
 <link rel="icon" type="image/png" href="icon.png">
+<meta property="og:title" content="ORBIT IDE — Your code. Your environment. Your orbit.">
+<meta property="og:description" content="A Rust-powered, next-gen desktop IDE. Free downloads: Windows .exe, Ubuntu/Debian .deb, Fedora .rpm.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sciversesummitstfrancis-coder.github.io/orbit-ide/">
+<meta property="og:image" content="./og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ORBIT IDE — Your code. Your environment. Your orbit.">
+<meta name="twitter:description" content="A Rust-powered, next-gen desktop IDE. Free downloads for Linux + Windows.">
+<meta name="twitter:image" content="./og.png">
+<meta name="theme-color" content="#05060f">
 <style>
   :root {
     --bg: #05060f;
@@ -123,8 +133,12 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .features {
-    max-width: 1180px; margin: 0 auto; padding: 3rem 2rem 5rem;
+    max-width: 1180px; margin: 0 auto; padding: 1rem 2rem 5rem;
     display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem;
+  }
+  .release { max-width: 1180px; margin: 0 auto; padding: 1rem 2rem 1rem; }
+  .release-inner .cards {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; margin-top: 1.2rem;
   }
   .card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
@@ -205,6 +219,17 @@
         <div class="ring r3"></div>
       </div>
       <img class="core" src="icon.png" alt="ORBIT IDE app icon">
+    </div>
+  </section>
+
+  <section class="release" id="whats-new">
+    <div class="release-inner">
+      <div class="pill"><span class="dot"></span> What's new in v0.1.0</div>
+      <div class="cards">
+        <div class="card"><div class="icon">🎬</div><h3>Cinematic boot sequence</h3><p>A refined multi-stage splash takes you from launch to workspace — calm, fast, premium.</p></div>
+        <div class="card"><div class="icon">⚙️</div><h3>Tauri 2 stability</h3><p>Faster shell spawn, tighter fs/dialog/opener plugins and a hardened window lifecycle.</p></div>
+        <div class="card"><div class="icon">📦</div><h3>Signed release channel</h3><p>Every build is cryptographically signed — .exe, .deb, .rpm and AppImage ship with .sig files and a live latest.json for the in-app updater.</p></div>
+      </div>
     </div>
   </section>
 
