@@ -1,15 +1,33 @@
 mod services;
-use services::{ai, atlas, capsules, db, extensions, filesystem, git, hud, lsp, mission, receipts, replay, settings, terminal, timemachine, trust, workspace};
+use services::{ai, atlas, capsules, db, extensions, filesystem, git, hud, lifecycle, lsp, mission, receipts, replay, settings, terminal, timemachine, trust, workspace};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            let db = db::init(app.handle())?;
+            #[cfg(desktop)]
+            {
+                if let Some(splash) = app.get_webview_window("splash") {
+                    let _ = splash.show();
+                    let _ = splash.set_focus();
+                }
+                if let Some(main) = app.get_webview_window("main") {
+                    let _ = main.hide();
+                }
+            }
+            let db = match db::init(app.handle()) {
+                Ok(db) => db,
+                Err(e) => {
+                    lifecycle::emit_error(app.handle(), &format!("Database initialization failed: {e}"));
+                    return Err(e.into());
+                }
+            };
             app.manage(db);
+            lifecycle::emit_init(app.handle(), "db", "Preparing local workspace data", 36);
             Ok(())
         })
+        .manage(lifecycle::StartupState::default())
         .manage(terminal::TerminalState::default())
         .manage(lsp::LspState::default())
         .manage(ai::AiStreamState::default())
@@ -71,6 +89,9 @@ pub fn run() {
             atlas::atlas_impact,
             replay::replay_plan,
             hud::hud_metrics,
+            lifecycle::splash_ready,
+            lifecycle::frontend_ready,
+            lifecycle::show_main_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ORBIT IDE");

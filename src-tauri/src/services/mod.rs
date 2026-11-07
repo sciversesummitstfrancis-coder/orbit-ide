@@ -4,6 +4,7 @@ pub mod db;
 pub mod extensions;
 pub mod filesystem;
 pub mod git;
+pub mod lifecycle;
 pub mod lsp;
 pub mod receipts;
 pub mod settings;

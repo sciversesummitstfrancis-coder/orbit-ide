@@ -1,4 +1,3 @@
-use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tauri::State;

@@ -12,13 +12,33 @@
   "app": {
     "windows": [
       {
+        "label": "splash",
+        "url": "splash.html",
+        "title": "ORBIT IDE",
+        "width": 520,
+        "height": 320,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "center": true,
+        "visible": true,
+        "skipTaskbar": true,
+        "shadow": true,
+        "focus": true
+      },
+      {
+        "label": "main",
+        "url": "index.html",
         "title": "ORBIT IDE",
         "width": 1280,
         "height": 800,
         "minWidth": 960,
         "minHeight": 640,
         "resizable": true,
-        "decorations": true
+        "decorations": true,
+        "visible": false,
+        "center": true
       }
     ],
     "security": {

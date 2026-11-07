@@ -1,0 +1,104 @@
+use serde::Serialize;
+use std::time::{Duration, Instant};
+use tauri::{AppHandle, Emitter, Manager, State};
+use std::sync::Mutex;
+
+pub struct StartupState(pub Mutex<StartupInner>);
+pub struct StartupInner {
+    #[allow(dead_code)]
+    pub started_at: Instant,
+    pub splash_ready: bool,
+    pub frontend_ready: bool,
+    pub main_shown: bool,
+}
+impl Default for StartupState {
+    fn default() -> Self {
+        Self(Mutex::new(StartupInner { started_at: Instant::now(), splash_ready: false, frontend_ready: false, main_shown: false }))
+    }
+}
+
+#[derive(Serialize, Clone)]
+pub struct InitEvent<'a> {
+    pub step: &'a str,
+    pub message: &'a str,
+    pub progress: u8,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+pub fn emit_init(app: &AppHandle, step: &'static str, message: &'static str, progress: u8) {
+    let _ = app.emit("app://init-progress", InitEvent { step, message, progress, error: None });
+}
+pub fn emit_complete(app: &AppHandle, message: &'static str) {
+    let _ = app.emit("app://init-complete", InitEvent { step: "complete", message, progress: 100, error: None });
+}
+pub fn emit_error(app: &AppHandle, message: &str) {
+    let _ = app.emit("app://init-error", InitEvent { step: "error", message: "Startup issue detected", progress: 100, error: Some(message.to_string()) });
+}
+
+fn hide_splash(app: &AppHandle) {
+    if let Some(w) = app.get_webview_window("splash") {
+        let _ = w.hide();
+        let _ = w.close();
+    }
+}
+
+pub fn reveal_main(app: &AppHandle) -> Result<(), String> {
+    // ensure splash cannot linger
+    hide_splash(app);
+    let main = app.get_webview_window("main").ok_or_else(|| "main window not found".to_string())?;
+    main.show().map_err(|e| e.to_string())?;
+    main.set_focus().map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn splash_ready(app: AppHandle, state: State<'_, StartupState>) -> Result<(), String> {
+    {
+        let mut s = state.0.lock().map_err(|_| "startup state lock")?;
+        if s.splash_ready { return Ok(()); }
+        s.splash_ready = true;
+    }
+    // Real initialization milestones: Rust setup completed before this command is callable;
+    // services/plugins/SQLite are registered in setup(). Frontend is mounting in parallel.
+    emit_init(&app, "rust_ready", "Initializing environment", 22);
+    std::thread::sleep(Duration::from_millis(40));
+    emit_init(&app, "services", "Preparing workspace services", 48);
+    std::thread::sleep(Duration::from_millis(40));
+    emit_init(&app, "frontend", "Loading interface resources", 72);
+    // allow a brief window for main webview to boot; frontend_ready may advance this sooner
+    let app2 = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(550));
+        let should_complete = app2.state::<StartupState>().0.lock().map(|s| !s.main_shown).unwrap_or(true);
+        if should_complete {
+            emit_init(&app2, "finalizing", "Almost ready", 92);
+            std::thread::sleep(Duration::from_millis(120));
+            emit_complete(&app2, "Ready");
+        }
+    });
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn frontend_ready(app: AppHandle, state: State<'_, StartupState>) -> Result<(), String> {
+    let should_emit = {
+        let mut s = state.0.lock().map_err(|_| "startup state lock")?;
+        if s.frontend_ready { false } else { s.frontend_ready = true; !s.main_shown }
+    };
+    if should_emit {
+        emit_init(&app, "frontend_ready", "Finalizing workspace", 94);
+        emit_complete(&app, "Ready");
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn show_main_window(app: AppHandle, state: State<'_, StartupState>) -> Result<(), String> {
+    {
+        let mut s = state.0.lock().map_err(|_| "startup state lock")?;
+        if s.main_shown { hide_splash(&app); return Ok(()); }
+        s.main_shown = true;
+    }
+    reveal_main(&app)
+}

@@ -17,11 +17,11 @@ import AtlasPanel from "./components/AtlasPanel";
 import ReplayPanel from "./components/ReplayPanel";
 import HudPanel from "./components/HudPanel";
 
-import Splash from "./components/Splash";
 import { DebugIcon, ExplorerIcon, ExtensionsIcon, GitIcon, OrbitMark, RefreshIcon, SaveIcon, SearchIcon, SettingsIcon } from "./components/Icons";
 import { orbit, workspaceApi, type RecentWorkspace } from "./services/orbit";
 import { checkForUpdate, getUpdaterConfig, setUpdaterConfig } from "./services/updater";
 import { tmApi } from "./services/timemachine";
+import { invoke } from "@tauri-apps/api/core";
 import { useWorkspace } from "./store/workspace";
 
 type Activity = "explorer" | "search" | "git" | "extensions" | "debug" | "settings";
@@ -36,7 +36,6 @@ const activities: { id: Activity; label: string; icon: (p: { width?: number; hei
 ];
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
   const [activity, setActivity] = useState<Activity>("explorer");
   const [panel, setPanel] = useState<PanelTab>("terminal");
   const [panelOpen, setPanelOpen] = useState(true);
@@ -47,7 +46,10 @@ export default function App() {
   const [updateStatus, setUpdateStatus] = useState<string>("");
   const [autoUpdate, setAutoUpdate] = useState(false);
   const ws = useWorkspace();
-  useEffect(() => { getUpdaterConfig().then((c) => { setAutoUpdate(c.autoCheck); if (c.autoCheck) void checkForUpdate({ auto: true }).then((r) => { if (r.status === "available") setUpdateStatus(`Update ${r.version} available`); }); }).catch(() => {}); }, []);
+  useEffect(() => {
+    if ((window as any).__TAURI_INTERNALS__) void invoke("frontend_ready").catch(() => {});
+    getUpdaterConfig().then((c) => { setAutoUpdate(c.autoCheck); if (c.autoCheck) void checkForUpdate({ auto: true }).then((r) => { if (r.status === "available") setUpdateStatus(`Update ${r.version} available`); }); }).catch(() => {});
+  }, []);
   const restoredRef = useRef(false);
   const saveTimer = useRef<number | null>(null);
   const draftTimer = useRef<number | null>(null);
@@ -166,8 +168,6 @@ export default function App() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [active, ws.root]);
-
-  if (showSplash) return <Splash onDone={() => setShowSplash(false)} />;
 
   return (
     <div className="orbit-app">
