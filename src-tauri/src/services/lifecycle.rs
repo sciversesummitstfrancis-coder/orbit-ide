@@ -37,10 +37,7 @@ pub fn emit_error(app: &AppHandle, message: &str) {
 }
 
 fn hide_splash(app: &AppHandle) {
-    if let Some(w) = app.get_webview_window("splash") {
-        let _ = w.hide();
-        let _ = w.close();
-    }
+    if let Some(w) = app.get_webview_window("splash") { let _ = w.hide(); let _ = w.close(); }
 }
 
 pub fn reveal_main(app: &AppHandle) -> Result<(), String> {
@@ -58,29 +55,39 @@ pub async fn splash_ready(app: AppHandle, state: State<'_, StartupState>) -> Res
         if s.splash_ready { return Ok(()); }
         s.splash_ready = true;
     }
-    // Milestones reflect real startup phases (DB/services/plugins registered in setup;
-    // frontend mount signaled by frontend_ready) with timed pacing so the sequence is legible.
-    emit_init(&app, "system", "INITIALIZING SYSTEM", 12);
-    std::thread::sleep(Duration::from_millis(90));
-    emit_init(&app, "environment", "ESTABLISHING ENVIRONMENT", 28);
-    std::thread::sleep(Duration::from_millis(90));
-    emit_init(&app, "modules", "LOADING CORE MODULES", 46);
-    std::thread::sleep(Duration::from_millis(90));
-    emit_init(&app, "sync", "SYNCHRONIZING COMPONENTS", 64);
+    // Real milestones (DB/services/plugins already registered in setup; frontend signaled separately).
+    // Messages map to the cinematic stages; frontend controls pacing/skip so app readiness is never delayed.
+    emit_init(&app, "awakening", "SYSTEM AWAKENING", 6);
+    std::thread::sleep(Duration::from_millis(120));
+    emit_init(&app, "core", "CORE INITIALIZATION", 18);
+    std::thread::sleep(Duration::from_millis(120));
+    emit_init(&app, "sync", "MODULE SYNCHRONIZATION", 42);
     let app2 = app.clone();
     std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(420));
+        std::thread::sleep(Duration::from_millis(500));
         let (frontend_ready, main_shown) = app2.state::<StartupState>().0.lock().map(|s| (s.frontend_ready, s.main_shown)).unwrap_or((false, false));
         if main_shown { return; }
         if frontend_ready {
-            emit_init(&app2, "workspace", "PREPARING WORKSPACE", 88);
+            emit_init(&app2, "env", "ENVIRONMENT PREPARATION", 78);
+            std::thread::sleep(Duration::from_millis(160));
+            emit_init(&app2, "final", "FINAL ACTIVATION", 94);
             std::thread::sleep(Duration::from_millis(120));
             emit_complete(&app2, "SYSTEM ONLINE");
         } else {
-            emit_init(&app2, "workspace", "PREPARING WORKSPACE", 82);
-            std::thread::sleep(Duration::from_millis(900));
-            let main_shown = app2.state::<StartupState>().0.lock().map(|s| s.main_shown).unwrap_or(false);
-            if !main_shown { emit_complete(&app2, "SYSTEM ONLINE"); }
+            emit_init(&app2, "env", "ENVIRONMENT PREPARATION", 66);
+            for _ in 0..18 {
+                std::thread::sleep(Duration::from_millis(350));
+                let (frontend_ready, main_shown) = app2.state::<StartupState>().0.lock().map(|s| (s.frontend_ready, s.main_shown)).unwrap_or((false, false));
+                if main_shown { return; }
+                if frontend_ready {
+                    emit_init(&app2, "final", "FINAL ACTIVATION", 94);
+                    std::thread::sleep(Duration::from_millis(120));
+                    emit_complete(&app2, "SYSTEM ONLINE");
+                    return;
+                }
+            }
+            emit_init(&app2, "final", "FINAL ACTIVATION", 92);
+            emit_complete(&app2, "SYSTEM ONLINE");
         }
     });
     Ok(())
@@ -93,8 +100,9 @@ pub async fn frontend_ready(app: AppHandle, state: State<'_, StartupState>) -> R
         if s.frontend_ready { false } else { s.frontend_ready = true; !s.main_shown }
     };
     if should_emit {
-        emit_init(&app, "workspace", "PREPARING WORKSPACE", 90);
+        emit_init(&app, "env", "ENVIRONMENT PREPARATION", 82);
         std::thread::sleep(Duration::from_millis(80));
+        emit_init(&app, "final", "FINAL ACTIVATION", 95);
         emit_complete(&app, "SYSTEM ONLINE");
     }
     Ok(())
